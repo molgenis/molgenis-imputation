@@ -40,6 +40,8 @@ defaults = {
 
 	'cwd' : os.getcwd(),
 	'tools_dir' : 'tools',
+	'files_link' : 'http://molgenis26.target.rug.nl/downloads/molgenis-impute-files.tgz',
+	'files_file' : 'molgenis-impute-files.tgz',
 	'reference_dir' : 'resources/imputationReference',
 	'shapeit_link' : 'http://www.shapeit.fr/script/get.php?id=18',
 	'shapeit_file' : 'shapeit.v2.r644.linux.x86_64.tgz',
@@ -203,16 +205,21 @@ def add_custom_reference_panels(verbose=False):
 						defaults[reference_name + ext_name] = stem
 
 def setup_download_command():
-	
- 	#Check if wget exists..
-        if which('wget'):
-                download_command = lambda link, output_file : 'wget -O %s %s' % (output_file, link)
-        elif which('curl'):
-                download_command = lambda link, output_file : 'curl %s > %s' % (link, output_file)
-        else:
-                raise Exception('Error: At least one of the wget or curl tools should be installed')
-        defaults['download_command'] = download_command
+	"""
+	Assess which download command is available in the system
+	"""
+	global defaults
 
+	#Check if wget exists..
+	if which('wget'):
+		download_command = lambda link, output_file : 'wget -O %s %s' % (output_file, link)
+	elif which('curl'):
+		#download_command = lambda link, output_file : 'curl %s > %s' % (link, output_file)
+		download_command = lambda link, output_file : (system, ['curl %s' % (link)], {'stdout' : output_file})
+	else:
+		raise Exception('Error: At least one of the wget or curl tools should be installed')
+
+	defaults['download_command'] = download_command
 
 def which(program):
 	"""
@@ -260,7 +267,7 @@ def system(command, stdout=None, verbose=False, dummy=False):
 
 	return ret
 
-def system_many(commands, stdout=None, verbose=False):
+def system_many(commands, stdout=None, verbose=False, dummy=False):
 	"""
 	Executes a list of commands. Stops if the commands returns a non-zero code
 	"""
@@ -268,7 +275,7 @@ def system_many(commands, stdout=None, verbose=False):
 
 		command_type = type(command).__name__ 
 		if command_type == 'str':
-			ret = system(command, stdout=stdout, verbose=verbose)
+			ret = system(command, stdout=stdout, verbose=verbose, dummy=dummy)
 
 			if ret:
 				raise Exception('Problem while running: %s' % command)
@@ -349,7 +356,7 @@ def gunzip_to_IMPUTE2(input_gzip_file, output_filename, verbose=False):
 
 	return (system, [' '.join(command[0:3])], {'stdout' : command[4], 'verbose' : verbose})
 
-def install_tool(tool_name, install_actions, verbose=False):
+def install_tool(tool_name, install_actions, verbose=False, dummy=False):
 	"""
 	Runs the usual scripts needed to install a linux application
 	"""
@@ -407,7 +414,7 @@ def install_tool(tool_name, install_actions, verbose=False):
 		else:
 			raise Exception('Invalid action: %s' % action)
 
-	system_many(commands, verbose=verbose)
+	system_many(commands, verbose=verbose, dummy=dummy)
 
 def check_command_if_exists(tool_name, verbose = False):
 	"""
@@ -420,7 +427,7 @@ def check_command_if_exists(tool_name, verbose = False):
 	if verbose:
 		print 'Command: ', tool_name, ' exists.'
 
-def dl_tools(verbose=False):
+def dl_tools(verbose=False, dummy=False):
 	"""
 	Downloads all necessary tools for the imputation pipeline
 	"""
@@ -434,6 +441,9 @@ def dl_tools(verbose=False):
 	check_command_if_exists('tar', verbose=verbose)
 	check_command_if_exists('unzip', verbose=verbose)
 	check_command_if_exists('g++', verbose=verbose)
+
+	#Download necessary files
+	install_tool('files', install_actions='dl_untar', verbose=verbose, dummy=dummy)
 
 	#Download and install shapeit
 	install_tool('shapeit', install_actions = 'cdtools_mkdir_dldir_untardir_cdcwd', verbose=verbose)
@@ -804,7 +814,7 @@ if __name__ == '__main__':
 		show_reference_panels()
 
 	if args.dl_tools:
-		dl_tools(verbose=verbose)
+		dl_tools(verbose=verbose, dummy=dummy)
 
 	if args.dl_reference:
 		dl_reference(args.reference, verbose=verbose)
