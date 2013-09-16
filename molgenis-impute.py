@@ -708,6 +708,9 @@ def perform_impute(study, results, reference, backend, verbose=False, dummy=Fals
 
 	global defaults
 
+	if not reference:
+		raise Exception('The \'--reference\' parameter is needed for the impute action')
+
 	job_id = get_job_id()
 
 	reference_dir = os.path.join(defaults['cwd'], defaults['reference_dir'], defaults[reference + '_dir'])
