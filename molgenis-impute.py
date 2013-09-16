@@ -537,7 +537,7 @@ def worksheet_filenamer(job_id):
 	"""
 	return 'worksheet_' + job_id + '.csv'
 
-def worksheet_path_filenamer(pipeline_name, job_id, worksheet_filename):
+def worksheet_path_filenamer(pipeline_name, job_id):
 	"""
 	Returns the full path of a worksheet
 	"""
@@ -545,6 +545,7 @@ def worksheet_path_filenamer(pipeline_name, job_id, worksheet_filename):
 	worksheet_path = os.path.join(defaults['cwd'], generated_dir_namer(pipeline_name, job_id)) 
 	#Make sure this directory exists
 	mkdir(worksheet_path)
+	worksheet_filename = worksheet_filenamer(job_id)
 	return os.path.join(worksheet_path, worksheet_filename)
 
 def worksheet_saver(worksheet_filename, worksheet_data, verbose = False):
@@ -561,9 +562,8 @@ def create_worksheet(job_id, pipeline_name, worksheet_data, verbose = False):
 	"""
 	Creates the worksheet file
 	"""
-        worksheet_filename = worksheet_filenamer(job_id)
-        worksheet_filename_path = worksheet_path_filenamer(pipeline_name, job_id,  worksheet_filename)
-        worksheet_saver(worksheet_filename_path, worksheet_data, verbose)
+	worksheet_filename_path = worksheet_path_filenamer(pipeline_name, job_id)
+	worksheet_saver(worksheet_filename_path, worksheet_data, verbose)
 
 def generated_dir_namer(pipeline_name, job_id):
 	"""
@@ -575,7 +575,7 @@ def results_dir_namer(pipeline_name, job_id):
 	"""
 	Creates the name of the directory where the results will be stored
 	"""
-        return os.path.join(defaults['cwd'], defaults[pipeline_name + '_results_dir'] + '_' + job_id)
+	return os.path.join(defaults['cwd'], defaults[pipeline_name + '_results_dir'] + '_' + job_id)
 
 def molgenis_command_formatter(pipeline_name, job_id, backend):
 	"""
@@ -588,7 +588,7 @@ def molgenis_command_formatter(pipeline_name, job_id, backend):
 		'--path', defaults[pipeline_name + '_pipeline_dir'],
 		'--workflow', 'workflow.csv',
 		'--parameters', 'parameters.csv',
-		worksheet_filenamer(job_id),
+		worksheet_path_filenamer(pipeline_name, job_id),
 		'--rundir', generated_dir_namer(pipeline_name, job_id),
 		'--backend', backend,
 		'--database', 'none',
