@@ -59,8 +59,8 @@ defaults = {
 	'vcftools_file' : 'vcftools_0.1.11.tar.gz',
 	'vcftools_dir' : 'vcftools_0.1.11',
 	'genotypeAligner_link' : 'http://www.molgenis.org/jenkins/job/systemsgenetics/nl.systemsgenetics%24genotype-aligner/lastBuild/artifact/nl.systemsgenetics/genotype-aligner/1.1.0/genotype-aligner-1.1.1-jar-with-dependencies.jar',
-	'genotypeAligner_file' : 'genotype-aligner-1.1.1-jar-with-dependencies.jar',
-	'genotypeAligner_dir' : 'genotype_aligner',
+	'genotypeAligner_file' : 'GenotypeAligner.jar',
+	'genotypeAligner_dir' : 'genotype_aligner/GenotypeAligner-1.1.1',
 
 	'reference_panels' : [
 		('GIANT.phase1_release_v3.20101123', 
