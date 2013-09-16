@@ -25,15 +25,18 @@ Also note that imputation reference panels can take tens of GBs of disk space
 ## Setup 
 Initially, run the following to download all necessary tools for imputation:
 ```
-python molgenis-impute.py --dl_tools```
+python molgenis-impute.py --dl_tools
+```
 
 Then download a reference panel of your choice. To list all available reference panels for downloading, run: 
 ```
-python molgenis-impute.py --list```
+python molgenis-impute.py --list
+```
 
 To download a reference panel. Run:
 ```
-python molgenis-impute.py --dl_reference < NAME >```
+python molgenis-impute.py --dl_reference < NAME >
+```
 
 where < NAME > is the name of the reference panel as provided by the --list option.
 
