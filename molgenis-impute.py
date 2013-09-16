@@ -58,8 +58,8 @@ defaults = {
 	'vcftools_link' : 'http://downloads.sourceforge.net/project/vcftools/vcftools_0.1.11.tar.gz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcftools%2Ffiles%2F&ts=1374814925&use_mirror=heanet',
 	'vcftools_file' : 'vcftools_0.1.11.tar.gz',
 	'vcftools_dir' : 'vcftools_0.1.11',
-	'genotypeAligner_link' : 'http://www.molgenis.org/jenkins/job/systemsgenetics/nl.systemsgenetics%24genotype-aligner/lastBuild/artifact/nl.systemsgenetics/genotype-aligner/1.1.0/genotype-aligner-1.1.0-jar-with-dependencies.jar',
-	'genotypeAligner_file' : 'genotype-aligner-1.1.0-jar-with-dependencies.jar',
+	'genotypeAligner_link' : 'http://www.molgenis.org/jenkins/job/systemsgenetics/nl.systemsgenetics%24genotype-aligner/lastBuild/artifact/nl.systemsgenetics/genotype-aligner/1.1.0/genotype-aligner-1.1.1-jar-with-dependencies.jar',
+	'genotypeAligner_file' : 'genotype-aligner-1.1.1-jar-with-dependencies.jar',
 	'genotypeAligner_dir' : 'genotype_aligner',
 
 	'reference_panels' : [
