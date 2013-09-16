@@ -646,6 +646,9 @@ def perform_phase(study, results, backend, verbose=False, dummy=False):
 		#Try to locate study data
 		chromosomes = get_chr_pedmap_files(study)
 
+	if not chromosomes:
+		raise Exception('Could not find any files named chr<CHROMOSOME>.ped and chr<CHROMOSOME>.map in study dir: %s' % (study))
+
 	worksheet_data = [
 		['project'] + [job_id for x in chromosomes],
 		['m'] + [os.path.join(defaults['cwd'], defaults['genetic_map'].replace('@CHR@', chromosome)) for chromosome in chromosomes],
