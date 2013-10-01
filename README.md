@@ -124,7 +124,7 @@ This software is under the Simplified BSD Licese.
     * <a href="alexandros.kanterakis@gmail.com">Alexandros Kanterakis</a>
 * Contributors:
     * <a href="patrickdeelen@gmail.com">Patrick Deelen</a>
-    * <a hreF="freerk.van.dijk@gmail.com">reerk Van Dijk</a>
+    * <a hreF="freerk.van.dijk@gmail.com">Freerk Van Dijk</a>
     * <a href="h.v.byelas@gmail.com">George Byelas</a>
     * <a href="m.dijkstra.work@gmail.com">Martijn Dijkstra</a>
 * Supervision:
