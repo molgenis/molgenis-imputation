@@ -63,7 +63,7 @@ if __name__ == '__main__':
 			if not args.reference:
 				raise Exception('You need to define a reference panel. Use the --reference parameter. For a list for all available reference panels, use --list')
 
-			imp.perform_phase(args.study, args.output, args.reference, 
+			imp.perform_impute(args.study, args.output, args.reference, 
 				additional_impute2_parameters=args.additional_impute2_parameters, 
 				sample_batch_size=args.sample_batch_size,
 				position_batch_size=args.position_batch_size,
