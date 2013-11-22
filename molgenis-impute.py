@@ -35,7 +35,7 @@ if __name__ == '__main__':
 	
 	args = parser.parse_args()
 
-	imp = Imputation(tools_dir=args.dl_tools, reference_dir=args.reference_dir)
+	imp = Imputation(tools_dir=args.tools_dir, reference_dir=args.reference_dir)
 
 	if args.dl_tools:
 		imp.install_imputation_tools()
