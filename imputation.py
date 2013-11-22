@@ -1030,7 +1030,7 @@ class Imputation:
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : chromosome}) for chromosome in chromosomes],
 			['outputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
-			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes]
+			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes],
 			['studyData'] + [ ' '.join([os.path.join(study, 'chr' + chromosome + '.' + x) for x in extensions])  for chromosome in chromosomes],
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
