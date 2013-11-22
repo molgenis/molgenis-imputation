@@ -1046,6 +1046,8 @@ class Imputation:
 			'''
 			Create a list with (from, to) pairs. For sample chunking
 			'''
+			if sample_batch_size >= n:
+				return [[1, n]]
 
 			ratio = n / (n/sample_batch_size)
 
