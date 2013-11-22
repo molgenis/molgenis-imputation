@@ -796,7 +796,7 @@ class Imputation:
 			self.reference_dir = os.path.join(self.cwd, self.reference_dir)
 
 		if tools_dir:
-			self.tools_directory = tools_directory
+			self.tools_directory = tools_dir
 		else:
 			self.tools_directory = os.path.join(self.cwd, self.tools_directory)
 
