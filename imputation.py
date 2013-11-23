@@ -1077,7 +1077,7 @@ class Imputation:
 
 		#Get number of samples
 		with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
-			n_samples = (len(haps_pattern_f.readline().split())-1)/2
+			n_samples = (len(haps_pattern_f.readline().split())-5)/2
 
 		sample_chunks = get_sample_chunks(n_samples)
 
