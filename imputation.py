@@ -1098,7 +1098,7 @@ class Imputation:
 			['toChrPos'] + [str(p[2]) for p in positions for sample_chunk in sample_chunks],
 			['fromSample'] + [str(sample_chunk[0]) for p in positions for sample_chunk in sample_chunks],
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
-			['samplechunksn'] + [sample_chunks_n for p in positions for sample_chunk in sample_chunks], 
+			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks], 
 		]
 		mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
 
