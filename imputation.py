@@ -1080,6 +1080,7 @@ class Imputation:
 			n_samples = (len(haps_pattern_f.readline().split())-5)/2
 
 		sample_chunks = get_sample_chunks(n_samples)
+		sample_chunks_n = len(sample_chunks)
 
 		positions = [position for position in self.chr_pos_generator(chromosomes, position_interval=position_batch_size)]
 
@@ -1097,6 +1098,7 @@ class Imputation:
 			['toChrPos'] + [str(p[2]) for p in positions for sample_chunk in sample_chunks],
 			['fromSample'] + [str(sample_chunk[0]) for p in positions for sample_chunk in sample_chunks],
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
+			['samplechunksn'] + [sample_chunks_n for p in positions for sample_chunk in sample_chunks], 
 		]
 		mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
 
