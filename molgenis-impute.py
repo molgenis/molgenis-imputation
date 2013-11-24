@@ -32,6 +32,7 @@ if __name__ == '__main__':
 	parser.add_argument('--reference', help='name of the imputation reference panel')
 	parser.add_argument('--action', help='Action to do: liftover, phase, impute', choices=['liftover', 'phase', 'impute'])
 	parser.add_argument('--backend', help='Execution environment. Default: local', choices=['pbs',  'grid', 'local'], default='local')
+	parser.add_argument('--nosubmit', help='Create scripts but don\'t submit them for execution', action='store_true')
 	
 	args = parser.parse_args()
 
@@ -54,10 +55,10 @@ if __name__ == '__main__':
 			raise Exception('You need to define a directory where the output results will be stored (parameter --output')
 
 		if args.action == 'liftover':
-			imp.perform_liftover(args.study, args.output, backend=args.backend)
+			imp.perform_liftover(args.study, args.output, backend=args.backend, submit=args.submit)
 
 		elif args.action == 'phase':
-			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend)
+			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend, submit=args.submit)
 
 		elif args.action == 'impute':
 			if not args.reference:
@@ -67,6 +68,7 @@ if __name__ == '__main__':
 				additional_impute2_parameters=args.additional_impute2_parameters, 
 				sample_batch_size=args.sample_batch_size,
 				position_batch_size=args.position_batch_size,
-				backend=args.backend)
+				backend=args.backend,
+				submit=args.submit)
 
 
