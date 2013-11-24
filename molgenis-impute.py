@@ -55,10 +55,10 @@ if __name__ == '__main__':
 			raise Exception('You need to define a directory where the output results will be stored (parameter --output')
 
 		if args.action == 'liftover':
-			imp.perform_liftover(args.study, args.output, backend=args.backend, submit=args.submit)
+			imp.perform_liftover(args.study, args.output, backend=args.backend, submit=not args.nosubmit)
 
 		elif args.action == 'phase':
-			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend, submit=args.submit)
+			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend, submit=not args.nosubmit)
 
 		elif args.action == 'impute':
 			if not args.reference:
@@ -69,6 +69,6 @@ if __name__ == '__main__':
 				sample_batch_size=args.sample_batch_size,
 				position_batch_size=args.position_batch_size,
 				backend=args.backend,
-				submit=args.submit)
+				submit=not args.nosubmit)
 
 
