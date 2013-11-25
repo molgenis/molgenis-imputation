@@ -800,8 +800,6 @@ class Imputation:
 		else:
 			self.tools_directory = os.path.join(self.cwd, self.tools_directory)
 
-		self.add_custom_reference_panels()
-
 	def install_imputation_tools(self):
 		'''
 		Download and install all necessary tools and data for imputation
@@ -1037,7 +1035,12 @@ class Imputation:
 
 		mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
 
-	def perform_impute(self, study, results, reference, additional_impute2_parameters=' ', sample_batch_size=500, position_batch_size = 5000000, backend='local', submit=True):
+	def perform_impute(self, study, results, reference, additional_impute2_parameters=' ', 
+		sample_batch_size=500, 
+		position_batch_size=5000000,
+		custom_chromosomes=None,
+		backend='local', 
+		submit=True):
 		'''
 		Generates and submits the imputation scripts
 		'''
@@ -1074,6 +1077,14 @@ class Imputation:
 		haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
 		if not chromosomes:
 			raise Exception('Could not find any files named chr<1-22>.haps in %s' % study)
+
+		#Check for custom chromosomes
+		if custom_chromosomes:
+			custom_chromosomes = custom_chromosomes.split(',')
+			for custom_chromosome in custom_chromosomes:
+				if custom_chromosome not in chromosomes:
+					raise Exception('Cannot locate reference panel for requested chromosome: %s' % (str(custom_chromosome))
+			chromosomes = custom_chromosomes
 
 		#Get number of samples
 		with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
