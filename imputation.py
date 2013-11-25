@@ -1083,7 +1083,7 @@ class Imputation:
 			custom_chromosomes = custom_chromosomes.split(',')
 			for custom_chromosome in custom_chromosomes:
 				if custom_chromosome not in chromosomes:
-					raise Exception('Cannot locate reference panel for requested chromosome: %s' % (str(custom_chromosome))
+					raise Exception('Cannot locate reference panel for requested chromosome: %s' % (str(custom_chromosome)))
 			chromosomes = custom_chromosomes
 
 		#Get number of samples

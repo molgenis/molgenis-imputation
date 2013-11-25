@@ -124,6 +124,7 @@ To add a new reference panel create a new directory in ```resources/imputationRe
 * 1000GP_chr1.vcf.gz
 * 1000GP_chr2.vcf.gz
 * ...
+
 Then run:
 ```
 python molgenis-impute.py --add_reference

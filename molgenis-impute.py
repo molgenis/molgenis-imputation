@@ -28,7 +28,7 @@ if __name__ == '__main__':
 	parser.add_argument('--chromosomes', help='comma separated values of chromosomes (If not set, imputation for all chromosomes will be performed')
 	parser.add_argument('--additional_shapeit_parameters', help='Extra command line arguments to pass to SHAPEIT tool', default=' ')
 	parser.add_argument('--additional_impute2_parameters', help='Extra command line arguments to pass to impute2 tool', default=' ')
-	parser.add_argument('--position_batch_size', help='Size of the chromosomal position of each imputation batch', default=5000000, type=int)
+	parser.add_argument('--position_batch_size', help='Size of the chromosomal size of each imputation batch', default=5000000, type=int)
 	parser.add_argument('--sample_batch_size', help='Minimum number of samples in imputation batches', default=500, type=int)
 	parser.add_argument('--reference', help='name of the imputation reference panel')
 	parser.add_argument('--action', help='Action to do: liftover, phase, impute', choices=['liftover', 'phase', 'impute'])
