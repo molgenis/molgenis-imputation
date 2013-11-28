@@ -13,7 +13,7 @@ molgenis-impute performs three main actions:
 * imputation
 
 ## Requirements
-molgenis-impute runs in any 64-bit x86 linux distribution and it requires the following tools:
+molgenis-impute runs in any 64-bit x86 Linux distribution and it requires the following tools:
 * wget (or curl)
 * tar
 * unzip
@@ -47,6 +47,11 @@ python molgenis-impute.py --dl_reference < NAME >
 
 where < NAME > is the name of the reference panel as provided by the --list option.
 
+Example:
+```
+python molgenis-impute.py --dl_reference GIANT.metabo.phase1_release_v3.20101123
+```
+
 ## Imputation study panel
 A study panel should be in plink's PED and MAP format: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml . Moreover, the PED/MAP files should be splitted per chromosome and stored in a single directory. For example:
 
@@ -68,6 +73,11 @@ Liftovering is the process of changing the genomic assembly of a dataset from on
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action liftover
 ```
+For Example:
+```
+python molgenis-impute.py --study `pwd`/resource/GWAS/HapMap3/b36/ --output `pwd`/results_liftover --action liftover
+```
+
 Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will be stored in the directory defined with the ```--output``` option in ped/map format. The filenames will be:
 * chr1.ped , chr1.map
 * chr2.ped , chr2.map
@@ -80,6 +90,10 @@ Phasing is the process of determining the haplotype structure of genotype data. 
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action phase
 ```
+For example:
+```
+python molgenis-impute.py --study `pwd`/results_liftover --output `pwd`/results_phase --action phase
+```
 Under the hood molgenis-impute uses the <a href="http://www.shapeit.fr/">SHAPEIT</a> tool. The output will be stored in the directory defined in the ```--output``` option in <a href="http://www.stats.ox.ac.uk/~marchini/software/gwas/file_format.html">genotype/sample</a> format.
 
 ## Impute
@@ -87,6 +101,12 @@ To impute a phased dataset run the following command:
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action impute --reference < REFERENCE NAME >
 ```
+For example:
+```
+python molgenis-impute.py --study `pwd`/results_phase --reference GIANT.phase1_release_v3.20101123 --output `pwd`/results_impute --action impute
+```
+
+The options that this command takes are:
 * ```< STUDY DIRECTORY >``` is the directory where the study panel exists. The study panel should be phased (preferrably with SHAPEIT) in the <a href="http://www.stats.ox.ac.uk/~marchini/software/gwas/file_format.html">genotype/sample</a> format. 
 * ```< OUTPUT DIRECTORY>``` is the directory where the output will be stored
 * ```< REFERENCE NAME >``` is the name of the reference panel that will be used for the imputation. To get a list of all reference panels available run:
@@ -94,9 +114,9 @@ python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTOR
 python molgenis-impute.py --list
 ```
 
-Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/genotype-aligner">Genotype Aligner</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. 
+Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/Genotype-Harmonizer">Genotype Harmonizer</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. 
 
-The imputation task is split according many chunks. The split is 2-dimensional: according to genomic position and according to samples: 
+The imputation task is split in many chunks. The split is 2-dimensional: according to genomic position and according to samples: 
 * The genomic position split is per 5.000.000 distance. You can change this with the ```--position_batch_size``` option.
 * The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. 
 
