@@ -18,7 +18,14 @@ molgenis-impute runs in any 64-bit x86 linux distribution and it requires the fo
 * tar
 * unzip
 * g++
+* java 1.6 or higher
 * python 2.7
+* numpy
+
+For example, to set up the environment in Ubuntu you can run:
+```
+sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev 
+```
 
 Also note that imputation reference panels can take tens of GBs of disk space 
 
@@ -66,6 +73,8 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 * chr2.ped , chr2.map
 * ...
 
+The result of this process is in binary plink format.
+
 ## Phasing
 Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be in PED/MAP format. The command is:
 ```
@@ -87,6 +96,12 @@ python molgenis-impute.py --list
 
 Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/genotype-aligner">Genotype Aligner</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. 
 
+The imputation task is split according many chunks. The split is 2-dimensional: according to genomic position and according to samples: 
+* The genomic position split is per 5.000.000 distance. You can change this with the ```--position_batch_size``` option.
+* The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. 
+
+By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
+
 ## Example
 The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset and is located in the ```resources/GWAS/HapMap3/b36/``` directory. You can impute this dataset with GIANT release of 1000 Genomes Project by following the following steps (in the presented order). For these examples we assume that you have installed all necessary tools with the ```--dl_tools``` options and installed the reference panel with the ```--dl_reference GIANT.phase1_release_v3.20101123``` option.
 * liftover from hg18 to hg19:
@@ -105,21 +120,28 @@ python molgenis-impute.py --study `pwd`/results_phase --reference GIANT.phase1_r
 The final results of this proccess will be at the ```results_impute``` directory. The ``` `pwd` ``` part in the paths is to make sure that the complete path from the root is included (pwd is the Linux command to Print the Working Directory).
 
 ## Add a new reference panel
-To add a new reference panel create a new directory in ```resources/imputationReference```. In this directory you can store the reference panel in compressed (with gzip) Variant Called Format (VCF). The files should have .vcf.gz extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
+To add a new reference panel create a new directory in ```resources/imputationReference```. The name of the directory will be the name of the new reference panel. In this directory, store the reference panel in compressed (with gzip) Variant Called Format (VCF). The files should have .vcf.gz extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
 * 1000GP_chr1.vcf.gz
 * 1000GP_chr2.vcf.gz
 * ...
 
-In the same directory, the reference panel should also be stored in compressed haps and legend files (.haps.gz and .legend.gz extension respectivelly). To convert a vcf.gz file in .haps.gz and .legend.gz format use the vcftools in the tools directory. For example:
+Then run:
 ```
-tools/vcftools_0.1.11/bin/vcftools --gzvcf chr1.vcf.gz --IMPUTE --out resources/imputationReference/my_ref/chr1
+python molgenis-impute.py --add_reference
 ```
-The output of this command are two files: chr1.impute.hap and chr1.impute.legend. You need to rename these files to chr1.haps and chr1.legend respectively. Then compress these files with gzip so that the final resuls will be these two files: chr1.haps.gz and chr1.legend.gz . You need to repeat this procedure for all chromosomes. 
+This checks the existence of the *.vcf.gz files in all new directories and makes the appropriate format coversions from compressed gzip to impute2's hap and legend files. You don't need to do anything else. 
+
+Alternatively, if you want to install your own .hap and .legend files, you can place them in a new directory under ```resources/imputationReference```. Each chromosome should be in a separate pair of files. Moreover the files should be compressed with gzip and the files' extensions should be: .haps.gz and .legend.gz . For example: 1000_GP_chr1.haps.gz and 1000_GP_chr1.legend.gz
+
+## Additional parameters
+* ```--dl_tools```: set the installation directory for imputation tools. Default: < currrent working dir >/tools 
+* ```--reference_dir```: set the installation directory for the imputation reference panels. Default: < currrent working dir >/resources/imputationReference
+* ```--nosubmit```: Do not submit for execution the generated scripts. 
 
 ## License 
 This software is under the Simplified BSD Licese.
 
-## Authors
+## About
 * Main development: 
     * <a href="alexandros.kanterakis@gmail.com">Alexandros Kanterakis</a>
 * Contributors:
@@ -129,6 +151,10 @@ This software is under the Simplified BSD Licese.
     * <a href="m.dijkstra.work@gmail.com">Martijn Dijkstra</a>
 * Supervision:
     * <a href="m.a.swertz@gmail.com">Morris Swertz</a>
+* The code is also hosted in pypedia (http://www.pypedia.com/index.php/Imputation). To obtain the code of imputation.py from pypedia run:
+```
+curl http://www.pypedia.com/index.php?get_code=%23Imputation\(\)  > imputation.py 
+```
 
 ## Contact 
 Alexandros Kanterakis
