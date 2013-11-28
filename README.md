@@ -30,6 +30,8 @@ sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev
 Also note that imputation reference panels can take tens of GBs of disk space 
 
 ## Setup 
+Latest release of MOLGENIS-impute is v0.7: <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.tar.gz">MOLGENIS-impute.v0.7.tar.gz</a>, <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.zip">MOLGENIS-impute.v0.7.zip</a> 
+
 Initially, run the following to download all necessary tools for imputation:
 ```
 python molgenis-impute.py --dl_tools
