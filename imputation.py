@@ -224,7 +224,7 @@ class Install_tool_helper:
 			download_command = lambda link, output_file : 'wget -O %s %s' % (output_file, link)
 		elif Install_tool_helper.which('curl'):
 			#download_command = lambda link, output_file : 'curl %s > %s' % (link, output_file)
-			download_command = lambda link, output_file : (Install_tool_helper.execute, ['curl %s' % (link)], {'stdout' : output_file})
+			download_command = lambda link, output_file : (Install_tool_helper.execute, ['curl -L %s' % (link)], {'stdout' : output_file})
 		else:
 			raise Exception('Error: Could not find any of the wget or curl commands')
 
@@ -751,6 +751,7 @@ class Imputation:
 	Link: ftp://share.sph.umich.edu/1000genomes/fullProject/2012.03.14/GIANT.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.vcf.gz.tgz
 ''',
 		'link': 'ftp://share.sph.umich.edu/1000genomes/fullProject/2012.03.14/GIANT.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.vcf.gz.tgz',
+		'dir' : 'GIANT.phase1_release_v3.20101123',
 		'file': 'GIANT.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.vcf.gz.tgz',
 		'vcfgz': 'chr%(chromosome)s.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.vcf.gz',
 		'hapsgz': 'chr%(chromosome)s.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.haps.gz',
