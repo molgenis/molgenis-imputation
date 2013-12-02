@@ -63,14 +63,11 @@ A study panel should be in plink's PED and MAP format: http://pngu.mgh.harvard.e
 * my_stydy/chr2.map
 * ...
 
-In this release we include a testing study panel in the directory: ```resources/GWAS/HapMap3/b36/``` . For information about how this study was prepared check the ```resources/GWAS/HapMap3/b36/README.txt``` file.
+In this release we include a testing study panel in the directory: ```resources/GWAS/small``` . For information about how this study was prepared check the ```resources/GWAS/small/README.txt``` file.
 
-In molgenis-impute, in order to use a directory with a study panel in any of the analysis use the option: --study and provide the **root path** of that directory. For example:
-```
-python molgenis-impute.py --study /home/user/molgenis-impute/resources/GWAS/HapMap3/b36/ --action liftover --output /home/user/results
-```
+In molgenis-impute, in order to use a directory with a study panel in any of the analysis use the option: --study and provide the **absolute path** of that directory. 
 
-## Liftover
+## Liftover (Step 1)
 Liftovering is the process of changing the genomic assembly of a dataset from one version (usual older) to another (newer). To liftover a study panel from the hg18 genome assembly to hg19, run the following:
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action liftover
@@ -87,8 +84,8 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 
 The result of this process is in binary plink format.
 
-## Phasing
-Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be in PED/MAP format. The command is:
+## Phasing (Step 2)
+Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be in binary plink format (BED/BIM/FAM) files and **aligned in the hg19 genetic reference**. The command is:
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action phase
 ```
@@ -98,10 +95,10 @@ python molgenis-impute.py --study `pwd`/results_liftover --output `pwd`/results_
 ```
 Under the hood molgenis-impute uses the <a href="http://www.shapeit.fr/">SHAPEIT</a> tool. The output will be stored in the directory defined in the ```--output``` option in <a href="http://www.stats.ox.ac.uk/~marchini/software/gwas/file_format.html">genotype/sample</a> format.
 
-## Impute
+## Impute (Step 3)
 To impute a phased dataset run the following command:
 ```
-python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action impute --reference < REFERENCE NAME >
+python molgenis-impute.py --study < PHASED STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action impute --reference < REFERENCE NAME >
 ```
 For example:
 ```
@@ -123,6 +120,8 @@ The imputation task is split in many chunks. The split is 2-dimensional: accordi
 * The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. 
 
 By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
+
+If the reference panel is not in the default directory (the < current directory >/resource/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
 
 ## Example
 The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset and is located in the ```resources/GWAS/HapMap3/b36/``` directory. You can impute this dataset with GIANT release of 1000 Genomes Project by following the following steps (in the presented order). For these examples we assume that you have installed all necessary tools with the ```--dl_tools``` options and installed the reference panel with the ```--dl_reference GIANT.phase1_release_v3.20101123``` option.

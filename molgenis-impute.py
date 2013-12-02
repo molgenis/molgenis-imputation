@@ -6,9 +6,30 @@ Alexandros Kanterakis, alexandros.kanterakis@gmail.com
 Please read documentation in README.md 
 
 """
-
+import os
+import sys
 import argparse
 from imputation import Imputation
+
+# Check python version
+if sys.version_info[0] == 2 and sys.version_info[1] >= 7:
+	#Version is ok
+	pass
+else:
+	raise Exception('Incompatible python version. (v. 2.7 needed)')
+
+def check_for_absolute_path(agument, path):
+	if not path:
+		return 
+
+	if not os.path.isabs(path):
+		exception_text = '''
+In argument: %s
+The path: %s
+Is not an absolute path
+		''' % (argument, path)
+		raise Exception(exception_text)
+
 
 if __name__ == '__main__':
 
@@ -39,6 +60,12 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	imp = Imputation(tools_dir=args.tools_dir, reference_dir=args.reference_dir)
+
+	#Check for absolute paths:
+	check_for_absolute_path('--study', args.study)
+	check_for_absolute_path('--output', args.output)
+	check_for_absolute_path('--tools_dir', args.output)
+	check_for_absolute_path('--reference_dir', args.output)
 
 	if args.dl_tools:
 		imp.install_imputation_tools()
