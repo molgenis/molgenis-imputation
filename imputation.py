@@ -221,7 +221,7 @@ class Install_tool_helper:
 
 		#Check if wget exists..
 		if Install_tool_helper.which('wget'):
-			download_command = lambda link, output_file : 'wget -O %s %s' % (output_file, link)
+			download_command = lambda link, output_file : 'wget --no-check-certificate -O %s %s' % (output_file, link)
 		elif Install_tool_helper.which('curl'):
 			#download_command = lambda link, output_file : 'curl %s > %s' % (link, output_file)
 			download_command = lambda link, output_file : (Install_tool_helper.execute, ['curl -L %s' % (link)], {'stdout' : output_file})
@@ -943,7 +943,7 @@ class Imputation:
 					self.reference_panels[reference_name] = {'description' : 'Custon panel add from %s' % self.reference_dir}
 
 					stem = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf.gz'))
-					if stem:
+					if stem and stem[0]:
 						self.reference_panels[reference_name]['vcfgz'] = stem[0]
 						self.reference_panels[reference_name]['hapsgz'] = stem[0].replace('vcf.gz', 'haps.gz')
 						self.reference_panels[reference_name]['legendgz'] = stem[0].replace('vcf.gz', 'legend.gz')
