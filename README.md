@@ -17,6 +17,7 @@ molgenis-impute runs in any 64-bit x86 Linux distribution and it requires the fo
 * wget (or curl)
 * tar
 * unzip
+* bunzip2
 * g++
 * java 1.6 or higher
 * python 2.7

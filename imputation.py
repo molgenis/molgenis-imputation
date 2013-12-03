@@ -231,7 +231,7 @@ class Install_tool_helper:
 		return download_command
 
 	@staticmethod
-	def execute(command, stdout=None, stop_if_error=False):
+	def execute(command, stdout=None, stop_if_error=True):
 		'''
 		This is a generic function for shell commands and function calls 
 
@@ -338,6 +338,7 @@ class Install_tool_helper:
 			* untar: untars the tool_filename
 			* untar_in_directory: untars the tool_filename in the tool_directory
 			* unzip: unzips the tool_filename
+			* bunzip2: unzip with bunzip2
 			* mv: moves the tool_filename to the tool_directory
 			* make_executable_in_directory: Makes executable the tool_filename in the tool_directory
 			* make: Runs the make command in the tool_directory
@@ -363,10 +364,14 @@ class Install_tool_helper:
 				commands += [Install_tool_helper.get_download_command()(tool_link, os.path.join(tool_directory, tool_filename))]
 			elif action == 'untar':
 				commands += ['tar zxvf %s' % (tool_filename)]
+			elif action == 'untar_bz2':
+				commands += ['tar jxvf %s' % (tool_filename)]
 			elif action == 'untar_in_directory':
 				commands += ['tar zxvf %s -C %s' % (os.path.join(tool_directory, tool_filename), tool_directory)]
 			elif action == 'unzip':
 				commands += ['unzip %s' % (tool_filename)]
+			elif action == 'bunzip2':
+				commands += ['bunzip2 %s' % (tool_filename)]
 			elif action == 'mv':
 				commands += [(os.rename, [tool_filename, os.path.join(tool_directory, tool_filename)])]
 			elif action == 'make_executable_in_directory':
@@ -733,11 +738,18 @@ class Imputation:
 		'install_actions': ['cd_target_directory', 'download', 'untar', 'make', 'mv', 'cd_current_working_directory']
 		}
 
+	tabix = {
+		'link' : 'http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fsamtools%2Ffiles%2Ftabix%2F&ts=1385997898&use_mirror=switch',
+		'file' : 'tabix-0.2.6.tar.bz2',
+		'dir'  : 'tabix-0.2.6',
+		'install_actions' : ['cd_target_directory', 'download', 'untar_bz2', 'make', 'mv', 'cd_current_working_directory']
+	}
+
 	genotypeAligner = {
-		'link': 'http://www.molgenis.org/jenkins/job/systemsgenetics/nl.systemsgenetics%24genotype-aligner/lastBuild/artifact/nl.systemsgenetics/genotype-aligner/1.1.0/genotype-aligner-1.1.1-jar-with-dependencies.jar',
-		'file': 'GenotypeAligner.jar',
-		'dir' : 'genotype_aligner/GenotypeAligner-1.1.1',
-		'install_actions': ['cd_target_directory', 'cd_tools_directory', 'check_if_file_exists', 'cd_current_working_directory']
+		'link': 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		'file': 'GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		'dir' : 'genotype_harmonizer',
+		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory']
 		}
 
 	#Reference panels
@@ -801,6 +813,8 @@ class Imputation:
 		else:
 			self.tools_directory = os.path.join(self.cwd, self.tools_directory)
 
+		print 'Checking for custom reference panels..'
+		self.add_custom_reference_panels()
 	def install_imputation_tools(self):
 		'''
 		Download and install all necessary tools and data for imputation
@@ -810,12 +824,12 @@ class Imputation:
 		self.install_tool_helper.mkdir(self.tools_directory, ignore_if_exist=True)
 
 		#Check if necessary tools exist
-		for tool in ['tar', 'unzip', 'g++', 'java']:
+		for tool in ['tar', 'unzip', 'g++', 'java', 'bunzip2']:
 			if not self.install_tool_helper.which(tool):
 				raise Exception('Could not find tool: %s . Install and retry' % tool)
 
 		#Download necessary files
-		for tool in [self.prereq, self.pipelines, self.shapeit, self.impute2, self.liftover, self.plink, self.vcftools, self.genotypeAligner]:
+		for tool in [self.prereq, self.pipelines, self.shapeit, self.impute2, self.liftover, self.plink, self.vcftools, self.tabix, self.genotypeAligner]:
 			self.install_tool_helper.install_tool(
 				tool['install_actions'], 
 				target_directory=self.tools_directory, 
@@ -845,6 +859,34 @@ class Imputation:
 
 		#Check that everything is ok
 		self.check_reference_panel_installation(reference_panel)
+
+	def convert_vcf_to_vcfgz(self, vcf_filename):
+		'''
+		Converts a vcf filename to vcf.gz
+		The compression is done with bgzip
+		'''
+
+		print 'Converting: %s to vcf.gz..' % vcf_filename
+
+		command = []
+		command += [os.path.join(self.tools_directory, self.tabix['dir'], 'bgzip')]
+		command += ['-c']
+		command += [vcf_filename]
+		output = vcf_filename + '.gz'
+		self.install_tool_helper.execute(' '.join(command), stdout=output)
+
+	def build_vcf_index_file(self, reference_panel, chromosome):
+		'''
+		Creates an index file for a compressed VCF file
+		'''
+		vcfgz_fn = os.path.join(self.reference_dir, reference_panel, self.reference_panels[reference_panel]['vcfgz'] % {'chromosome' : chromosome} )
+		print 'Creating index file for: %s' % vcfgz_fn
+		print 'Assuming that this file has been compressed with bgzip..'
+
+		command = [os.path.join(self.tools_directory, self.tabix['dir'], 'tabix')]
+		command += ['-p vcf']
+		command += [vcfgz_fn]
+		self.install_tool_helper.execute(' '.join(command))
 
 	def convert_vcf_to_IMPUTE2(self, reference_panel, chromosome):
 		'''
@@ -897,15 +939,14 @@ class Imputation:
 		if '%(chromosome)s' not in self.reference_panels[reference_panel]['vcfgz']:
 			raise Exception(self.reference_panels[reference_panel]['vcfgz'] + ' does not have a \'%(chromosome)s\' part')
 
-
 		this_reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])
 		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['vcfgz'].replace('%(chromosome)s', '*')))
-		if not info:
-			raise Exception('Reference panel %s had not been installed properly' % reference_panel)
+		if not info or not info[0]:
+			raise Exception('Reference panel %s had not been installed properly.' % reference_panel)
 
 		vcf_pattern, chromosomes = info
 
-		#Check if haps and legend files exist
+		print 'Checking if haps and legend files exist..'
 		if \
 			not self.reference_panels[reference_panel].has_key('hapsgz') or \
 			not self.reference_panels[reference_panel].has_key('legendgz') or \
@@ -927,6 +968,11 @@ class Imputation:
 		for chromosome in chromosomes_to_convert:
 			print 'Converting: %s to hap and legend' % self.reference_panels[reference_panel]['vcfgz'] % {'chromosome' : chromosome}
 			self.convert_vcf_to_IMPUTE2(reference_panel, chromosome)
+			
+		print 'Checking if vcf index files exist..'
+		for chromosome in chromosomes:
+			if not os.path.isfile(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['vcfgz']  % {'chromosome' : chromosome} ).replace('vcf.gz', 'vcf.gz.tbi')):
+				self.build_vcf_index_file(reference_panel, chromosome)
 
 	def add_custom_reference_panels(self):
 		'''
@@ -937,12 +983,36 @@ class Imputation:
 		for dir_entry in glob.glob(os.path.join(self.reference_dir, '*')):
 			if os.path.isdir(dir_entry):
 				reference_name = os.path.split(dir_entry)[1]
+				reference_name_dir = os.path.join(self.reference_dir, reference_name)
 				if not self.reference_panels.has_key(reference_name):
 					#Try to add this to the reference panels
 					print 'Adding custom reference: ' + reference_name
 					self.reference_panels[reference_name] = {'description' : 'Custon panel add from %s' % self.reference_dir}
 
+					stem_vcf = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf'))
+					stem_vcfgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf.gz'))
+
+					#Are there any vcf files that haven't been converted to .gz?
+					if not stem_vcf[0] and not stem_vcfgz[0]:
+						print 'Could not find *.vcf or *.vcf.gz files in %s' % self.reference_dir
+					elif not stem_vcfgz[0]:
+						print 'Could not find any *.vcf.gz but found *.vcf in %s' % self.reference_dir
+						print 'Converting vcf files to vcf.gz'
+						stem_vcf_dir = os.path.join(reference_name_dir, stem_vcf[0])
+						[self.convert_vcf_to_vcfgz(stem_vcf_dir % {'chromosome' : chromosome}) for chromosome in stem_vcf[1]]
+					elif not stem_vcf[0]:
+						pass # No vcf files but vcf.gz exist. We do not care about that
+					else:
+						#Both vcf and vcf.gz exist. Take the vcf that have not been converted to vcf.gz
+						for vcf_chromosome in stem_vcf[1]:
+							if vcf_chromosome not in stem_vcfgz[1]:
+								vcf_filename = os.path.join(reference_name_dir, stem_vcf[0] % {'chromosome' : vcf_chromosome})
+								print 'File %s has not been converted to ' % vcf_filename
+								self.convert_vcf_to_vcfgz(vcf_filename)
+
+					#Take all converted files
 					stem = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf.gz'))
+
 					if stem and stem[0]:
 						self.reference_panels[reference_name]['vcfgz'] = stem[0]
 						self.reference_panels[reference_name]['hapsgz'] = stem[0].replace('vcf.gz', 'haps.gz')
@@ -984,7 +1054,6 @@ class Imputation:
 		stem_ped = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
 		if not stem_ped:
 			raise Exception('Could not find any file named chr<1-22>.ped in %s' % study)
-
 	
 		stem_map = self.bfh.get_chromosome_files(os.path.join(study, '*.map'))
 		if not stem_map:
