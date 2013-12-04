@@ -1,6 +1,6 @@
 
 """
-molgenis-impute v.0.7.0
+molgenis-impute v.0.8.0
 Alexandros Kanterakis, alexandros.kanterakis@gmail.com
 
 Please read documentation in README.md 
@@ -11,6 +11,8 @@ import sys
 import argparse
 from imputation import Imputation
 
+__version__ = '0.8.0'
+
 # Check python version
 if sys.version_info[0] == 2 and sys.version_info[1] >= 7:
 	#Version is ok
@@ -18,7 +20,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] >= 7:
 else:
 	raise Exception('Incompatible python version. (v. 2.7 needed)')
 
-def check_for_absolute_path(agument, path):
+def check_for_absolute_path(argument, path):
 	if not path:
 		return 
 
@@ -34,8 +36,8 @@ Is not an absolute path
 if __name__ == '__main__':
 
 	description = """
-		MOLGENIS-compute imputation version 0.7.0
-	"""
+		MOLGENIS-compute imputation version: %s
+	""" % (__version__)
 
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
 
