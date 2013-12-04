@@ -1,4 +1,37 @@
 
+def Length_of_chromosomes_build_37():
+	"""
+	>>> print sum([y for x,y in Length_of_chromosomes_build_37().iteritems()])
+	3095667412
+	"""
+	return {
+		"1" : 249250621,
+		"2" : 243199373,
+		"3" : 198022430,
+		"4" : 191154276,
+		"5" : 180915260,
+		"6" : 171115067,
+		"7" : 159138663,
+		"8" : 146364022,
+		"9" : 141213431,
+		"10" : 135534747,
+		"11" : 134996516,
+		"12" : 133851895,
+		"13" : 115169878,
+		"14" : 107349540,
+		"15" : 102531392,
+		"16" : 90354753,
+		"17" : 81195210,
+		"18" : 78077248,
+		"19" : 59128983,
+		"20" : 63025520,
+		"21" : 48129895,
+		"22" : 51304566,
+		"X" : 155270560,
+		"Y" : 59373566,
+	}
+
+
 
 import os
 import uuid 
@@ -8,7 +41,7 @@ class Molgenis_compute:
 	Class that utilizes the molgenis-compute framework
 	'''
 
-	molgenis_compute_sh = 'molgenis-compute/molgenis-compute-core-0.0.1-SNAPSHOT/molgenis_compute.sh'
+	molgenis_compute_sh = 'molgenis-compute-core-0.0.1-SNAPSHOT/molgenis_compute.sh'
 
 	pipeline_dir = {
 		'liftover' : 'molgenis-pipelines-master/compute5/Liftover_genome_build_PEDMAP',
@@ -16,14 +49,23 @@ class Molgenis_compute:
 		'impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
 	}
 
-	def __init__(self, pipeline_root_directory, root_directory=None):
+	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
+		'''
+		pipeline_root_directory: The directory of the pipelines
+		molgenis_directory: the directory of molgenis compute
+		root_directory: The directory for the generated scripts
+		tools_directory: The directory where the tools are installed
+		'''
 		self.job_id = self.get_job_id()
 		self.pipeline_root_directory = pipeline_root_directory
 		if root_directory:
 			self.root_directory = root_directory
 		else:
 			self.root_directory = os.getcwd()
+		self.tools_directory = tools_directory
 		self.install_tool_helper = Install_tool_helper()
+		
+		self.molgenis_compute_sh = os.path.join(molgenis_directory, self.molgenis_compute_sh)
 
 	def get_job_id(self):
 		'''
@@ -49,7 +91,7 @@ class Molgenis_compute:
 		'''
 		Returns the full path of a worksheet
 		'''
-		worksheet_path = os.path.join(self.root_directory, self.generated_dir_namer(pipeline_name, job_id)) 
+		worksheet_path = self.generated_dir_namer(pipeline_name, job_id) 
 		#Make sure this directory exists
 		self.install_tool_helper.mkdir(worksheet_path, ignore_if_exist=True)
 		worksheet_filename = self.worksheet_filenamer(job_id)
@@ -71,20 +113,20 @@ class Molgenis_compute:
 		worksheet_filename_path = self.worksheet_path_filenamer(pipeline_name, job_id)
 		self.worksheet_saver(worksheet_filename_path, worksheet_data, verbose)
 
-	def generated_dir_namer(self, pipeline_name, job_id, generated_dir='generated'):
+	def generated_dir_namer(self, pipeline_name, job_id):
 		'''
 		Creates a name for the directory of the generated scripts 
 		'''
-		return os.path.join(generated_dir, pipeline_name) + '_' + job_id
+		return os.path.join(self.root_directory, pipeline_name) + '_' + job_id
 		
 	def create_root_worksheet(self, pipeline_name):
 		'''
 		Saves the information of the root directory for all files and tools in the pipelines
 		'''
-		root_worksheet = os.path.join(self.root_directory, self.generated_dir_namer(pipeline_name, self.job_id), 'root_' + self.job_id + '.csv')
+		root_worksheet = os.path.join(self.generated_dir_namer(pipeline_name, self.job_id), 'root_' + self.job_id + '.csv')
 		with open(root_worksheet, 'w') as root_worksheet_f:
 			root_worksheet_f.write('root\n')
-			root_worksheet_f.write(self.root_directory)
+			root_worksheet_f.write(self.tools_directory)
 			
 		self.root_worksheet = root_worksheet
 
@@ -146,39 +188,6 @@ class Molgenis_compute:
 
 		generated_dir = self.generated_dir_namer(pipeline_name, self.job_id)
 
-
-
-def Length_of_chromosomes_build_37():
-	"""
-	>>> print sum([y for x,y in Length_of_chromosomes_build_37().iteritems()])
-	3095667412
-	"""
-	return {
-		"1" : 249250621,
-		"2" : 243199373,
-		"3" : 198022430,
-		"4" : 191154276,
-		"5" : 180915260,
-		"6" : 171115067,
-		"7" : 159138663,
-		"8" : 146364022,
-		"9" : 141213431,
-		"10" : 135534747,
-		"11" : 134996516,
-		"12" : 133851895,
-		"13" : 115169878,
-		"14" : 107349540,
-		"15" : 102531392,
-		"16" : 90354753,
-		"17" : 81195210,
-		"18" : 78077248,
-		"19" : 59128983,
-		"20" : 63025520,
-		"21" : 48129895,
-		"22" : 51304566,
-		"X" : 155270560,
-		"Y" : 59373566,
-	}
 
 
 import os
@@ -313,11 +322,12 @@ class Install_tool_helper:
 		return False
 
 	@staticmethod
-	def install_tool(install_actions, target_directory=None, tool_directory=None, tool_filename=None, tool_link=None, current_working_directory=None):
+	def install_tool(install_actions, installation_directory=None, target_directory=None, tool_directory=None, tool_filename=None, tool_link=None, current_working_directory=None):
 		'''
 		Install a tool
 
 		Parameters:
+		installation_directory: The directory where we use to install all the tools
 		target_directory : The directory where the installation will take place. This method assumes that this directory exists already. 
 		tool_directory : The directory name of the tool. This directory is created under the 'target_directory'
 		tool_filename : The name of the file that contains the tool. Usually this is an archive file. This is not the name of the executable,
@@ -329,6 +339,7 @@ class Install_tool_helper:
 		the install_actions parameter. 
 
 		The actions are:
+			* cd_installation_directory: changes directory to the installation_directory
 			* cd_target_directory : changes directory to the target_directory
 			* cd_tools_directory : changes directory to the tool_directory
 			* cd_current_working_directory : changes directory to the current_working_directory
@@ -350,7 +361,9 @@ class Install_tool_helper:
 
 		commands = []
 		for action in install_actions:
-			if action == 'cd_target_directory':
+			if action == 'cd_installation_directory':
+				commands += [(os.chdir, [installation_directory])]
+			elif action == 'cd_target_directory':
 				commands += [(os.chdir, [target_directory])]
 			elif action == 'cd_tools_directory':
 				commands += [(os.chdir, [tool_directory])]
@@ -693,7 +706,7 @@ class Imputation:
 		'link': 'http://molgenis26.target.rug.nl/downloads/molgenis-impute-files.tgz',
 		'file': 'molgenis-impute-files.tgz',
 		'dir' : None, 
-		'install_actions': ['download', 'untar']
+		'install_actions': ['cd_installation_directory', 'download', 'untar']
 		}
 
 	pipelines = {
@@ -792,9 +805,11 @@ class Imputation:
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'
 	hg18tohg19_chain = 'resources/liftover/hg18ToHg19.over.chain'
 	reference_dir = 'resources/imputationReference'
-	tools_directory = 'tools'
+	tools_dir = 'tools'
+	molgenis_compute_dir = 'molgenis-compute'
+	generated_dir = 'generated'
 
-	def __init__(self, tools_dir=None, reference_dir=None, verbose=True):
+	def __init__(self, installation_dir=None, reference_dir=None, verbose=True):
 		'''
 		Set up Imputation class
 		'''
@@ -802,26 +817,35 @@ class Imputation:
 		self.bfh = bioinformatics_file_helper()
 		self.cwd = os.getcwd()
 		self.install_tool_helper = Install_tool_helper()
+	
+		if installation_dir:
+			self.installation_dir = installation_dir
+		else:
+			self.installation_dir = os.path.join(self.cwd, 'molgenis_imputation')
+
+		self.tools_dir = os.path.join(self.installation_dir, self.tools_dir)
+		self.molgenis_compute_dir = os.path.join(self.installation_dir, self.molgenis_compute_dir)
+		self.generated_dir = os.path.join(self.installation_dir, self.generated_dir)
+		self.genetic_map = os.path.join(self.installation_dir, self.genetic_map)
+		self.hg18tohg19_chain = os.path.join(self.installation_dir, self.hg18tohg19_chain)
 
 		if reference_dir:
 			self.reference_dir = reference_dir
 		else:
-			self.reference_dir = os.path.join(self.cwd, self.reference_dir)
+			self.reference_dir = os.path.join(self.installation_dir, self.reference_dir)
 
-		if tools_dir:
-			self.tools_directory = tools_dir
-		else:
-			self.tools_directory = os.path.join(self.cwd, self.tools_directory)
+		self.mc = Molgenis_compute(self.tools_dir, self.molgenis_compute_dir, self.generated_dir, self.installation_dir)
 
 		print 'Checking for custom reference panels..'
 		self.add_custom_reference_panels()
+
 	def install_imputation_tools(self):
 		'''
 		Download and install all necessary tools and data for imputation
 		'''
 		
 		#Make dir
-		self.install_tool_helper.mkdir(self.tools_directory, ignore_if_exist=True)
+		self.install_tool_helper.mkdir(self.tools_dir, ignore_if_exist=True)
 
 		#Check if necessary tools exist
 		for tool in ['tar', 'unzip', 'g++', 'java', 'bunzip2']:
@@ -832,7 +856,8 @@ class Imputation:
 		for tool in [self.prereq, self.pipelines, self.shapeit, self.impute2, self.liftover, self.plink, self.vcftools, self.tabix, self.genotypeAligner]:
 			self.install_tool_helper.install_tool(
 				tool['install_actions'], 
-				target_directory=self.tools_directory, 
+				installation_directory=self.installation_dir,
+				target_directory=self.tools_dir, 
 				tool_directory=tool['dir'], 
 				tool_filename=tool['file'], 
 				tool_link=tool['link'], 
@@ -869,7 +894,7 @@ class Imputation:
 		print 'Converting: %s to vcf.gz..' % vcf_filename
 
 		command = []
-		command += [os.path.join(self.tools_directory, self.tabix['dir'], 'bgzip')]
+		command += [os.path.join(self.tools_dir, self.tabix['dir'], 'bgzip')]
 		command += ['-c']
 		command += [vcf_filename]
 		output = vcf_filename + '.gz'
@@ -883,7 +908,7 @@ class Imputation:
 		print 'Creating index file for: %s' % vcfgz_fn
 		print 'Assuming that this file has been compressed with bgzip..'
 
-		command = [os.path.join(self.tools_directory, self.tabix['dir'], 'tabix')]
+		command = [os.path.join(self.tools_dir, self.tabix['dir'], 'tabix')]
 		command += ['-p vcf']
 		command += [vcfgz_fn]
 		self.install_tool_helper.execute(' '.join(command))
@@ -898,7 +923,7 @@ class Imputation:
 		total_commands = []
 	
 		command = []
-		command += [os.path.join(self.tools_directory, self.vcftools['dir'], 'bin', 'vcftools')]
+		command += [os.path.join(self.tools_dir, self.vcftools['dir'], 'bin', 'vcftools')]
 		command += ['--gzvcf']
 		command += [vcfgz_fn]
 		command += ['--IMPUTE']
@@ -1049,8 +1074,6 @@ class Imputation:
 		Generates and submits the liftover scripts
 		'''
 
-		mc = Molgenis_compute(self.tools_directory)
-
 		stem_ped = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
 		if not stem_ped:
 			raise Exception('Could not find any file named chr<1-22>.ped in %s' % study)
@@ -1062,14 +1085,14 @@ class Imputation:
 		chromosomes = stem_ped[1]
 
 		worksheet_data = [
-			['study'] + [mc.job_id for chromosome in chromosomes],
+			['study'] + [self.mc.job_id for chromosome in chromosomes],
 			['studyInputDir'] + [study for chromosome in chromosomes],
 			['liftOverChainFile'] + [os.path.join(self.cwd, self.hg18tohg19_chain) for chromosome in chromosomes],
 			['outputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 		]
 
-		mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
+		self.mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
 
 	def perform_phase(self, study, results, studyDataType='BED', additional_shapeit_parameters=' ', backend='local', submit=True):
 		'''
@@ -1078,8 +1101,6 @@ class Imputation:
 			BED : for binary plink files
 			PED : for text plink files
 		'''
-
-		mc = Molgenis_compute(self.tools_directory)
 		
 		if studyDataType == 'BED':
 				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
@@ -1094,7 +1115,7 @@ class Imputation:
 			raise Exception('Could not find any files named chr<CHROMOSOME>.%s in study dir: %s' % (studyDataType.lower(), study))
 
 		worksheet_data = [
-			['project'] + [mc.job_id for x in chromosomes],
+			['project'] + [self.mc.job_id for x in chromosomes],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : chromosome}) for chromosome in chromosomes],
 			['outputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
@@ -1103,7 +1124,7 @@ class Imputation:
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
 
-		mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
+		self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
 
 	def perform_impute(self, study, results, reference, additional_impute2_parameters=' ', 
 		sample_batch_size=500, 
@@ -1141,7 +1162,6 @@ class Imputation:
 			self.list_reference_panels()
 			raise Exception('Unknown reference panel: ' + reference)
 
-		mc = Molgenis_compute(self.tools_directory)
 		reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference]['dir'] )
 
 		haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
@@ -1166,7 +1186,7 @@ class Imputation:
 		positions = [position for position in self.chr_pos_generator(chromosomes, position_interval=position_batch_size)]
 
 		worksheet_data = [
-			['project'] + [mc.job_id for p in positions for sample_chunk in sample_chunks],
+			['project'] + [self.mc.job_id for p in positions for sample_chunk in sample_chunks],
 			['knownHapsG'] + [os.path.join(study, 'chr%s.haps' % p[0]) for p in positions for sample_chunk in sample_chunks],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['h'] + [os.path.join(reference_dir, self.reference_panels[reference]['hapsgz'] % {'chromosome'  : p[0]}) for p in positions for sample_chunk in sample_chunks],
@@ -1181,7 +1201,8 @@ class Imputation:
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
 			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks], 
 		]
-		mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
+		
+		self.mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
 
 	def perform_action(action, reference, study, results, backend):
 		'''

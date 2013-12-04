@@ -41,13 +41,14 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
 
-	parser.add_argument('--tools_dir', help='Installation directory for imputation tools. Default: <currrent working dir>/tools')
-	parser.add_argument('--reference_dir', help='Installation directory for the imputation reference panels. Default: <currrent working dir>/resources/imputationReference')
+	parser.add_argument('--installation_dir', help='Installation directory for imputation tools and resources. Default: <currrent working dir>/molgenis_imputation')
+	parser.add_argument('--reference_dir', help='Installation directory for the imputation reference panels. Default: <installation_dir>/resources/imputationReference')
 	parser.add_argument('--list', help='List of all available reference panels either already downloaded, or available for downloading', action='store_true')
 	parser.add_argument('--dl_tools', help='download all necessary imputation tools', action='store_true')
 	parser.add_argument('--dl_reference', help='download and install an imputation reference panel')
 	parser.add_argument('--study', help='Absolute path of the directory off the study panel')
 	parser.add_argument('--output', help='Absolute path of the output (results) directory')
+	parser.add_argument('--results', help='Same as --output')
 	parser.add_argument('--chromosomes', help='comma separated values of chromosomes (If not set, imputation for all chromosomes will be performed')
 	parser.add_argument('--additional_shapeit_parameters', help='Extra command line arguments to pass to SHAPEIT tool', default=' ')
 	parser.add_argument('--additional_impute2_parameters', help='Extra command line arguments to pass to impute2 tool', default=' ')
@@ -61,13 +62,20 @@ if __name__ == '__main__':
 	
 	args = parser.parse_args()
 
-	imp = Imputation(tools_dir=args.tools_dir, reference_dir=args.reference_dir)
+	imp = Imputation(installation_dir=args.installation_dir, reference_dir=args.reference_dir)
 
 	#Check for absolute paths:
 	check_for_absolute_path('--study', args.study)
 	check_for_absolute_path('--output', args.output)
-	check_for_absolute_path('--tools_dir', args.tools_dir)
+	check_for_absolute_path('--installation_dir', args.installation_dir)
 	check_for_absolute_path('--reference_dir', args.reference_dir)
+
+	if args.results:
+		if args.output:
+			if args.results != args.output:
+				raise Exception('--results and --output are the same parameters. They have different values')
+		else:
+			args.output = args.results
 
 	if args.dl_tools:
 		imp.install_imputation_tools()
