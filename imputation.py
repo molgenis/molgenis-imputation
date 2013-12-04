@@ -1054,7 +1054,7 @@ class Imputation:
 
 		for reference_panel in self.reference_panels:
 			print 'name: ', reference_panel
-			print 'descritpion: '
+			print 'description: '
 			print self.reference_panels[reference_panel]['description']
 			if 'link' in self.reference_panels[reference_panel]:
 				print '\tThis panel is available for download'
