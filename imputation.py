@@ -1012,7 +1012,7 @@ class Imputation:
 				if not self.reference_panels.has_key(reference_name):
 					#Try to add this to the reference panels
 					print 'Adding custom reference: ' + reference_name
-					self.reference_panels[reference_name] = {'description' : 'Custon panel add from %s' % self.reference_dir}
+					self.reference_panels[reference_name] = {'description' : '\tCustom panel add from %s' % self.reference_dir}
 
 					stem_vcf = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf'))
 					stem_vcfgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf.gz'))
@@ -1056,6 +1056,14 @@ class Imputation:
 			print 'name: ', reference_panel
 			print 'descritpion: '
 			print self.reference_panels[reference_panel]['description']
+			if 'link' in self.reference_panels[reference_panel]:
+				print '\tThis panel is available for download'
+			else:
+				print '\tThis panel is not available for download'
+			if os.path.exists(os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])):
+				print '\tThis panel is already installed'
+			else:
+				print '\tThis panel is not installed'
 			print '*' * 30
 
 	def chr_pos_generator(self, chromosomes, position_interval = 5000000):

@@ -33,22 +33,29 @@ Also note that imputation reference panels can take tens of GBs of disk space
 ## Setup 
 Latest release of MOLGENIS-impute is v0.8: <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.8.tar.gz">MOLGENIS-impute.v0.8.tar.gz</a>, <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.8.zip">MOLGENIS-impute.v0.8.zip</a> 
 
+For the .tar.gz file, uncompress it with: ```tar zxvf < FILENAME > ```. 
+For the .zip file, uncompress it with: ```unzip < FILENAME > ```. 
+
 Initially, run the following to download all necessary tools for imputation:
 ```
 python molgenis-impute.py --dl_tools
 ```
 
-Then download a reference panel of your choice. To list all available reference panels either for direct use or for downloading, run: 
+By default the files will be installed in the current location. To change this use the ```--installation_dir < DIR >``` option.
+
+The next step is to download a reference panel of your choice. To list all available reference panels either for direct use or for downloading, run: 
 ```
 python molgenis-impute.py --list
 ```
 
-To download a reference panel, run (you can skip this step if you only want to use the pre-installed reference panel named "test_reference"):
+To download a reference panel, run: (you can skip this step if you only want to use the pre-installed testing reference panel named "test_reference")
 ```
 python molgenis-impute.py --dl_reference < NAME >
 ```
 
 where < NAME > is the name of the reference panel as provided by the --list option.
+
+this will install the reference name to the default location: ```molgenis_imputation/resources/imputationReference```
 
 Example:
 ```
