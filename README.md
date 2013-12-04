@@ -55,7 +55,7 @@ python molgenis-impute.py --dl_reference < NAME >
 
 where < NAME > is the name of the reference panel as provided by the --list option.
 
-this will install the reference name to the default location: ```molgenis_imputation/resources/imputationReference```
+this will install the reference panel to the default location: ```molgenis_imputation/resources/imputationReference```. To select a custom location use the ```--reference_dir < DIR > ``` option. 
 
 Example:
 ```
