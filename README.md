@@ -43,7 +43,7 @@ Then download a reference panel of your choice. To list all available reference 
 python molgenis-impute.py --list
 ```
 
-To download a reference panel, run (you can skip this step if you only want to use the pre-installed reference panel named test_reference):
+To download a reference panel, run (you can skip this step if you only want to use the pre-installed reference panel named "test_reference"):
 ```
 python molgenis-impute.py --dl_reference < NAME >
 ```
@@ -162,14 +162,14 @@ This software is under the Simplified BSD Licese.
 
 ## About
 * Main development: 
-    * <a href="alexandros.kanterakis@gmail.com">Alexandros Kanterakis</a>
+    * <a href="mailto:alexandros.kanterakis@gmail.com">Alexandros Kanterakis</a>
 * Contributors:
-    * <a href="patrickdeelen@gmail.com">Patrick Deelen</a>
-    * <a hreF="freerk.van.dijk@gmail.com">Freerk Van Dijk</a>
-    * <a href="h.v.byelas@gmail.com">George Byelas</a>
-    * <a href="m.dijkstra.work@gmail.com">Martijn Dijkstra</a>
+    * <a href="mailto:patrickdeelen@gmail.com">Patrick Deelen</a>
+    * <a hreF="mailto:freerk.van.dijk@gmail.com">Freerk Van Dijk</a>
+    * <a href="mailto:h.v.byelas@gmail.com">George Byelas</a>
+    * <a href="mailto:m.dijkstra.work@gmail.com">Martijn Dijkstra</a>
 * Supervision:
-    * <a href="m.a.swertz@gmail.com">Morris Swertz</a>
+    * <a href="mailto:m.a.swertz@gmail.com">Morris Swertz</a>
 * The code is also hosted in pypedia (http://www.pypedia.com/index.php/Imputation). To obtain the code of imputation.py from pypedia run:
 ```
 curl http://www.pypedia.com/index.php?get_code=%23Imputation\(\)  > imputation.py 
