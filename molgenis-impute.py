@@ -66,8 +66,8 @@ if __name__ == '__main__':
 	#Check for absolute paths:
 	check_for_absolute_path('--study', args.study)
 	check_for_absolute_path('--output', args.output)
-	check_for_absolute_path('--tools_dir', args.output)
-	check_for_absolute_path('--reference_dir', args.output)
+	check_for_absolute_path('--tools_dir', args.tools_dir)
+	check_for_absolute_path('--reference_dir', args.reference_dir)
 
 	if args.dl_tools:
 		imp.install_imputation_tools()
