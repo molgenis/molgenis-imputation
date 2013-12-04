@@ -31,7 +31,7 @@ sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev
 Also note that imputation reference panels can take tens of GBs of disk space 
 
 ## Setup 
-Latest release of MOLGENIS-impute is v0.7: <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.tar.gz">MOLGENIS-impute.v0.7.tar.gz</a>, <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.zip">MOLGENIS-impute.v0.7.zip</a> 
+Latest release of MOLGENIS-impute is v0.8: <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.tar.gz">MOLGENIS-impute.v0.8.tar.gz</a>, <a href="https://github.com/molgenis/molgenis-imputation/archive/v0.7.zip">MOLGENIS-impute.v0.8.zip</a> 
 
 Initially, run the following to download all necessary tools for imputation:
 ```
@@ -125,10 +125,10 @@ By default molgenis-impute will perform imputation for all chromosomes located i
 If the reference panel is not in the default directory (the < current directory >/resource/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
 
 ## Example
-The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset and is located in the ```resources/GWAS/HapMap3/b36/``` directory. You can impute this dataset with GIANT release of 1000 Genomes Project by following the following steps (in the presented order). For these examples we assume that you have installed all necessary tools with the ```--dl_tools``` options and installed the reference panel with the ```--dl_reference GIANT.phase1_release_v3.20101123``` option.
+The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution. 
 * liftover from hg18 to hg19:
 ```
-python molgenis-impute.py --study `pwd`/resource/GWAS/HapMap3/b36/ --output `pwd`/results_liftover --action liftover
+python molgenis-impute.py --study `pwd`/resource/GWAS/small/ --output `pwd`/results_liftover --action liftover
 ```
 * phase:
 ```
@@ -136,24 +136,20 @@ python molgenis-impute.py --study `pwd`/results_liftover --output `pwd`/results_
 ```
 * impute:
 ```
-python molgenis-impute.py --study `pwd`/results_phase --reference GIANT.phase1_release_v3.20101123 --output `pwd`/results_impute --action impute
+python molgenis-impute.py --study `pwd`/results_phase --reference test_reference --output `pwd`/results_impute --action impute
 ```
 
-The final results of this proccess will be at the ```results_impute``` directory. The ``` `pwd` ``` part in the paths is to make sure that the complete path from the root is included (pwd is the Linux command to Print the Working Directory).
+The final results of this proccess will be at the ```results_impute``` directory. The ``` `pwd` ``` part in the paths is to make sure that the paths are absolute (pwd is the Linux command to Print the Working Directory).
 
 ## Add a new reference panel
-To add a new reference panel create a new directory in ```resources/imputationReference```. The name of the directory will be the name of the new reference panel. In this directory, store the reference panel in compressed (with gzip) Variant Called Format (VCF). The files should have .vcf.gz extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
-* 1000GP_chr1.vcf.gz
-* 1000GP_chr2.vcf.gz
+To add a new reference panel create a new directory in ```resources/imputationReference```. The name of the directory will be the name of the new reference panel. In this directory, store the reference panel in Variant Called Format (VCF). The files should have .vcf extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
+* 1000GP_chr1.vcf
+* 1000GP_chr2.vcf
 * ...
 
-Then run:
-```
-python molgenis-impute.py --add_reference
-```
-This checks the existence of the *.vcf.gz files in all new directories and makes the appropriate format coversions from compressed gzip to impute2's hap and legend files. You don't need to do anything else. 
+You don't need to do anything else. The next time you run molgenis-impute.py it will detect the new files and do the appropriate conversions. Plase take note that some conversion take a considerable amount of time, specially for large vcf files. 
 
-Alternatively, if you want to install your own .hap and .legend files, you can place them in a new directory under ```resources/imputationReference```. Each chromosome should be in a separate pair of files. Moreover the files should be compressed with gzip and the files' extensions should be: .haps.gz and .legend.gz . For example: 1000_GP_chr1.haps.gz and 1000_GP_chr1.legend.gz
+This is the recommended way for installing a new reference panel. Alternatively, if you want to install your own .hap and .legend files, you can place them in a new directory under ```resources/imputationReference```. Each chromosome should be in a separate pair of files. Moreover the files should be compressed with gzip and the files' extensions should be: .haps.gz and .legend.gz . For example: 1000_GP_chr1.haps.gz and 1000_GP_chr1.legend.gz. Finally either the .vcf or the compressed .vcf.gz should also exist in this directory for each chromosome. **IMPORTANT:** The .vcf.gz files should **not** be compressed with gzip, but with bgzip instead. bgzip is installed in tools/tabix-0.2.6/ . 
 
 ## Additional parameters
 * ```--dl_tools```: set the installation directory for imputation tools. Default: < currrent working dir >/tools 
