@@ -41,7 +41,7 @@ Initially, run the following to download all necessary tools for imputation:
 python molgenis-impute.py --dl_tools
 ```
 
-By default the files will be installed in the current location. To change this use the ```--installation_dir < DIR >``` option.
+By default the files will be installed in the molgenis_imputation directory in the current location. To change this use the ```--installation_dir < DIR >``` option.
 
 The next step is to download a reference panel of your choice. To list all available reference panels either for direct use or for downloading, run: 
 ```
@@ -149,7 +149,7 @@ python molgenis-impute.py --study `pwd`/results_phase --reference test_reference
 The final results of this proccess will be at the ```results_impute``` directory. The ``` `pwd` ``` part in the paths is to make sure that the paths are absolute (pwd is the Linux command to Print the Working Directory).
 
 ## Add a new reference panel
-To add a new reference panel create a new directory in ```molgenis_imputation/resources/imputationReference```. The name of the directory will be the name of the new reference panel. In this directory, store the reference panel in Variant Called Format (VCF). The files should have .vcf extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
+To add a new reference panel create a new directory in ```molgenis_imputation/resources/imputationReference``` (or in any custom location in case you are using the ```--reference_dir``` option). The name of the directory will be the name of the new reference panel. In this directory, store the reference panel in Variant Called Format (VCF). The files should have .vcf extension. Moreover each chromosome should be in a separate file and the name of the file should have at any point a chr< CHROMOSOME NUMBER > part. The naming should be consistent for all files. For example:
 * 1000GP_chr1.vcf
 * 1000GP_chr2.vcf
 * ...
