@@ -466,7 +466,7 @@ class bioinformatics_file_helper:
 
 		reference_files = glob.glob(path)
 		if not reference_files:
-			print 'Warning: path %s is empty' % path
+			#print 'Warning: path %s is empty' % path
 			return None, None
 		reference_filenames = [os.path.split(x)[1] for x in reference_files]
 
