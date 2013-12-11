@@ -167,6 +167,9 @@ This is the recommended way for installing a new reference panel. Alternatively,
 * ```--nosubmit```: Do not submit for execution the generated scripts. 
 * ```--results```: Same as ```--output```
 
+## Notes 
+All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.
+
 ## License 
 This software is under the Simplified BSD Licese.
 
