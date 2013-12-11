@@ -82,7 +82,7 @@ python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTOR
 ```
 For Example:
 ```
-python molgenis-impute.py --study `pwd`/molgenis_imputation/resource/GWAS/HapMap3/b36/ --output `pwd`/results_liftover --action liftover
+python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --output `pwd`/results_liftover --action liftover
 ```
 
 Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will be stored in the directory defined with the ```--output``` option in ped/map format. The filenames will be:
@@ -110,7 +110,7 @@ python molgenis-impute.py --study < PHASED STUDY DIRECTORY > --output < OUTPUT D
 ```
 For example:
 ```
-python molgenis-impute.py --study `pwd`/results_phase --reference GIANT.phase1_release_v3.20101123 --output `pwd`/results_impute --action impute
+python molgenis-impute.py --study `pwd`/results_phase --reference test_reference --output `pwd`/results_impute --action impute
 ```
 
 The options that this command takes are:
@@ -129,19 +129,22 @@ The imputation task is split in many chunks. The split is 2-dimensional: accordi
 
 By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
 
-If the reference panel is not in the default directory (the < current directory >/resource/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
+If the reference panel is not in the default directory (the < current directory >/resources/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
 
 ## Example
-The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution. 
+The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution in the directory ```resources/imputationReference/test_reference/```
 * liftover from hg18 to hg19:
+
 ```
-python molgenis-impute.py --study `pwd`/molgenis_imputation/resource/GWAS/small/ --output `pwd`/results_liftover --action liftover
+python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --output `pwd`/results_liftover --action liftover
 ```
 * phase:
+
 ```
 python molgenis-impute.py --study `pwd`/results_liftover --output `pwd`/results_phase --action phase
 ```
 * impute:
+
 ```
 python molgenis-impute.py --study `pwd`/results_phase --reference test_reference --output `pwd`/results_impute --action impute
 ```
@@ -163,6 +166,9 @@ This is the recommended way for installing a new reference panel. Alternatively,
 * ```--reference_dir```: set the installation directory for the imputation reference panels. Default: < currrent working dir >/molgenis_imputation/resources/imputationReference
 * ```--nosubmit```: Do not submit for execution the generated scripts. 
 * ```--results```: Same as ```--output```
+
+## Notes 
+All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.
 
 ## License 
 This software is under the Simplified BSD Licese.
