@@ -25,13 +25,13 @@ __version__ = '0.8.1'
 #Check OS version
 import platform
 if platform.system() != 'Linux':
-	raise Exception('Some of the tools needed for imputation are available only for Linux environment. Please run in Linux')
+	raise Exception('Some of the tools needed for imputation are available only for Linux environment. Please run in a Linux computer.')
 
 
 #Check if this is a x64 system
 import struct
 if 8 * struct.calcsize("P") != 64:
-	raise Exception('This is not a 64bit file system. ')
+	raise Exception('Please run in a 64bit file system. ')
 
 def check_for_absolute_path(argument, path):
 	if not path:
