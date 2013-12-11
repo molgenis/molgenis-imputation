@@ -1,6 +1,6 @@
 
 """
-molgenis-impute v.0.8.0
+molgenis-impute v.0.8.1
 Alexandros Kanterakis, alexandros.kanterakis@gmail.com
 
 Please read documentation in README.md 
