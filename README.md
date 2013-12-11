@@ -82,7 +82,7 @@ python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTOR
 ```
 For Example:
 ```
-python molgenis-impute.py --study `pwd`/molgenis_imputation/resource/GWAS/HapMap3/b36/ --output `pwd`/results_liftover --action liftover
+python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --output `pwd`/results_liftover --action liftover
 ```
 
 Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will be stored in the directory defined with the ```--output``` option in ped/map format. The filenames will be:
@@ -129,13 +129,13 @@ The imputation task is split in many chunks. The split is 2-dimensional: accordi
 
 By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
 
-If the reference panel is not in the default directory (the < current directory >/resource/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
+If the reference panel is not in the default directory (the < current directory >/resources/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
 
 ## Example
 The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution. 
 * liftover from hg18 to hg19:
 ```
-python molgenis-impute.py --study `pwd`/molgenis_imputation/resource/GWAS/small/ --output `pwd`/results_liftover --action liftover
+python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --output `pwd`/results_liftover --action liftover
 ```
 * phase:
 ```
