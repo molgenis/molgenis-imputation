@@ -110,7 +110,7 @@ python molgenis-impute.py --study < PHASED STUDY DIRECTORY > --output < OUTPUT D
 ```
 For example:
 ```
-python molgenis-impute.py --study `pwd`/results_phase --reference GIANT.phase1_release_v3.20101123 --output `pwd`/results_impute --action impute
+python molgenis-impute.py --study `pwd`/results_phase --reference test_reference --output `pwd`/results_impute --action impute
 ```
 
 The options that this command takes are:
@@ -132,7 +132,7 @@ By default molgenis-impute will perform imputation for all chromosomes located i
 If the reference panel is not in the default directory (the < current directory >/resources/imputationReference). Define the custom directory with the ```--reference_dir``` parameter. For example the following options: ```--reference_dir /my/custom/dir --reference 1000GP``` will assume that the reference panel is installed in /my/custom/dir/1000GP directory. 
 
 ## Example
-The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution. 
+The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution in the directory ```resources/imputationReference/test_reference/```
 * liftover from hg18 to hg19:
 ```
 python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --output `pwd`/results_liftover --action liftover
