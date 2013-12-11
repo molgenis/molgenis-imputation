@@ -36,7 +36,7 @@ if 8 * struct.calcsize("P") != 64:
 import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 for port in [('http', 80), ('https', 443)]:
-	result = sock.connect_ex(('https://www.github.com', port[1]))
+	result = sock.connect_ex(('%s://www.github.com' % port[0], port[1]))
 	if result != 0:
 		raise Exception('Port %i is not open. Therefore a %s connection cannot be established' % (port[1], port[0]))
 
