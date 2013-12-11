@@ -31,7 +31,7 @@ if platform.system() != 'Linux':
 #Check if this is a x64 system
 import struct
 if 8 * struct.calcsize("P") != 64:
-	raise Exception('Please run in a 64bit file system. ')
+	raise Exception('Please run in a 64bit system. ')
 
 def check_for_absolute_path(argument, path):
 	if not path:
