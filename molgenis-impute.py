@@ -3,9 +3,14 @@
 molgenis-impute v.0.8.1
 Alexandros Kanterakis, alexandros.kanterakis@gmail.com
 
-Please read documentation in README.md 
+Please read:
+ * LICENSE 
+ * documentation in README.md 
 
 """
+
+__version__ = '0.8.1'
+
 import os
 import sys
 import platform
@@ -20,8 +25,6 @@ else:
 from imputation import Imputation
 import argparse
 
-__version__ = '0.8.1'
-
 #Check OS version
 import platform
 if platform.system() != 'Linux':
@@ -34,11 +37,12 @@ if 8 * struct.calcsize("P") != 64:
 
 #Check if outgoing ports for 80 (http) and 443 (https) are open
 import socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 for port in [('http', 80), ('https', 443)]:
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	result = sock.connect_ex(('www.github.com', port[1]))
 	if result != 0:
-		raise Exception('Port %i is not open. Therefore a %s connection cannot be established' % (port[1], port[0]))
+		raise Exception('Port %i is not open. Therefore a %s connection cannot be established (tested on www.github.com)' % (port[1], port[0]))
+	sock.close()
 
 def check_for_absolute_path(argument, path):
 	if not path:
