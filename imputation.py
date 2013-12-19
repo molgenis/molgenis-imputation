@@ -987,7 +987,18 @@ class Imputation:
 				if \
 				not os.path.isfile(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['hapsgz']   % {'chromosome' : chromosome})) or \
 				not os.path.isfile(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['legendgz'] % {'chromosome' : chromosome})):
-					chromosomes_to_convert += [chromosome]
+					#Check if unzipped files exist instead of zipped 
+					unzipped_haps = os.path.join(this_reference_dir, self.reference_panels[reference_panel]['hapsgz']   % {'chromosome' : chromosome})
+					unzipped_haps = unzipped_haps.replace('.haps.gz', '.haps')
+					unzipped_legend = os.path.join(this_reference_dir, self.reference_panels[reference_panel]['legendgz'] % {'chromosome' : chromosome})
+					unzipped_legend = unzipped_legend.replace('.legend.gz', '.legend')
+					if not os.path.isfile(unzipped_haps) or not os.path.isfile(unzipped_legend):
+						#Unzipped files do not exist
+						chromosomes_to_convert += [chromosome]
+					else:
+						#Unzipped files exist
+						self.reference_panels[reference_panel]['hapsgz'] = self.reference_panels[reference_panel]['hapsgz'].replace('.haps.gz', '.haps')
+						self.reference_panels[reference_panel]['legendgz'] = self.reference_panels[reference_panel]['legendgz'].replace('.legend.gz', '.legend')
 
 		#Create missing haps and legends files
 		for chromosome in chromosomes_to_convert:
@@ -1102,7 +1113,7 @@ class Imputation:
 
 		self.mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
 
-	def perform_phase(self, study, results, studyDataType='BED', additional_shapeit_parameters=' ', backend='local', submit=True):
+	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True):
 		'''
 		Generates and submits the phasing scripts
 		studyDataType can take the following values: 
@@ -1110,17 +1121,26 @@ class Imputation:
 			PED : for text plink files
 		'''
 		
-		if studyDataType == 'BED':
-				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
-				extensions = ['bed', 'bim', 'fam']
-		elif studyDataType == 'PED':
-				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
-				extensions = ['ped', 'map']
-		else:
+		chromosomes = None
+		if studyDataType not in ['BED', 'PED', None]:
 			raise Exception('Unknown value for parameter studyDataType: ' + str(studyDataType))
 
+		if studyDataType != 'PED':
+			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
+			extensions = ['bed', 'bim', 'fam']
+			if chromosomes:
+				studyDataType = 'BED'
+
+		if not chromosomes and studyDataType != 'BED':
+			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
+			extensions = ['ped', 'map']
+			if chromosomes:
+				studyDataType = 'PED'
+
 		if not chromosomes:
-			raise Exception('Could not find any files named chr<CHROMOSOME>.%s in study dir: %s' % (studyDataType.lower(), study))
+			if not studyDataType:
+				studyDataType = '{bed,map}'
+			raise Exception('Could not find any files named *chr<CHROMOSOME>*.%s in study dir: %s' % (studyDataType.lower(), study))
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for x in chromosomes],
@@ -1128,7 +1148,7 @@ class Imputation:
 			['outputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes],
-			['studyData'] + [ ' '.join([os.path.join(study, 'chr' + chromosome + '.' + x) for x in extensions])  for chromosome in chromosomes],
+			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions])  for chromosome in chromosomes],
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
 
