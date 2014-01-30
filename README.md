@@ -93,7 +93,7 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 The result of this process is in binary plink format.
 
 ## Phasing (Step 2)
-Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be in binary plink format (BED/BIM/FAM) files and **aligned in the hg19 genetic reference**. The command is:
+Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. Moreover files should be **aligned in the hg19 genetic reference**. The command is:
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action phase
 ```
