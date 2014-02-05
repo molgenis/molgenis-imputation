@@ -691,6 +691,72 @@ class bioinformatics_file_helper:
 				print 'Delete: ', old_temp_filename
 		yield False
 
+def convert_impute2_reference_to_shapeit(
+	input_haps_filename = None,
+	input_legend_filename = None,
+	input_sample_filename = None,
+	output_haps_filename = None,
+	output_sample_filename = None,
+	chromosome = None,
+	input_gzip = True,
+):
+
+	if not input_haps_filename or not input_legend_filename or not input_sample_filename or not output_haps_filename or not output_sample_filename:
+		print 'Missing parameters. Run --help'
+		return
+
+	if input_gzip:
+		input_haps_file = gzip.open(input_haps_filename, 'rb')
+		input_legend_file = gzip.open(input_legend_filename, 'rb')
+	else:
+		input_haps_file = open(input_haps_filename)
+		input_legend_file = open(input_legend_filename)
+
+	
+	output_haps_file = open(output_haps_filename, 'w')
+	output_sample_file = open(output_sample_filename, 'w')
+
+	with open(input_sample_filename) as input_sample_file:
+		#Skip header
+		input_sample_file.readline()
+
+		input_sample = [x.replace('\n', '').split() for x in input_sample_file]
+
+	#sample header
+	output_sample_file.write('ID_1 ID_2 missing father mother sex plink_pheno\n')
+	output_sample_file.write('0 0 0 D D D B\n')
+
+	#Skip legend header
+	input_legend_file.readline()
+
+	first_line = True
+	line_counter = 0
+	for input_haps_line in input_haps_file:
+
+		input_haps_s = input_haps_line.replace('\n', '').split()
+		input_legend_line = input_legend_file.readline()
+		input_legend_s = input_legend_line.replace('\n', '').split()
+
+		line_counter += 1
+		if line_counter % 10000 == 0:
+			print 'Lines:', line_counter
+
+		if first_line:
+			output_sample_file.write('\n'.join([' '.join([str(i+1), str(i+1), '0', '0', '0', input_sample[i][3], '-9']) for i in range(len(input_haps_s)/2)]) + '\n')
+			first_line = False
+
+		
+		to_print = [chromosome, input_legend_s[0], input_legend_s[1], input_legend_s[2], input_legend_s[3]]
+
+		to_print += input_haps_s
+
+		output_haps_file.write(' '.join(to_print) + '\n')
+
+
+	output_haps_file.close()
+	output_sample_file.close()
+	input_haps_file.close()
+	input_legend_file.close()
 
 
 import os
@@ -951,21 +1017,21 @@ class Imputation:
 		#Execute commands
 		self.install_tool_helper.execute(total_commands)
 
-	def check_reference_panel_installation(self, reference_panel):
+	def check_reference_panel_installation(self, reference_panel, rformat='vcfgz', suffix='vcf.gz'):
 		'''
 		Make sure that the reference panel is installed properly 
 		and all the files have been inserted in the self.reference_panels dictionary
 		'''
 
 		#Check VCF files
-		if not self.reference_panels[reference_panel].has_key('vcfgz'):
-			raise Exception('Member dictionary reference_panels does not have key: \'vcfgz\'')
+		if not self.reference_panels[reference_panel].has_key(rformat):
+			raise Exception('Member dictionary reference_panels does not have key: \'%s\'' % rformat)
 
-		if '%(chromosome)s' not in self.reference_panels[reference_panel]['vcfgz']:
-			raise Exception(self.reference_panels[reference_panel]['vcfgz'] + ' does not have a \'%(chromosome)s\' part')
+		if '%(chromosome)s' not in self.reference_panels[reference_panel][rformat]:
+			raise Exception(self.reference_panels[reference_panel][rformat] + ' does not have a \'%(chromosome)s\' part')
 
 		this_reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])
-		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['vcfgz'].replace('%(chromosome)s', '*')))
+		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel][rformat].replace('%(chromosome)s', '*')))
 		if not info or not info[0]:
 			raise Exception('Reference panel %s had not been installed properly.' % reference_panel)
 
@@ -979,8 +1045,8 @@ class Imputation:
 			'%(chromosome)s' not in self.reference_panels[reference_panel]['legendgz']:
 
 			chrosomes_to_convert = chromosomes[:]
-			self.reference_panels[reference_panel]['hapsgz'] = self.reference_panels[reference_panel]['vcfgz'].replace('vcf.gz', 'haps.gz')
-			self.reference_panels[reference_panel]['legendgz'] = self.reference_panels[reference_panel]['vcfgz'].replace('vcf.gz', 'legend.gz')
+			self.reference_panels[reference_panel]['hapsgz'] = self.reference_panels[reference_panel][rformat].replace(suffix, 'haps.gz')
+			self.reference_panels[reference_panel]['legendgz'] = self.reference_panels[reference_panel][rformat].replace(suffix, 'legend.gz')
 		else:
 			chromosomes_to_convert = []
 			for chromosome in chromosomes:
@@ -1002,13 +1068,20 @@ class Imputation:
 
 		#Create missing haps and legends files
 		for chromosome in chromosomes_to_convert:
-			print 'Converting: %s to hap and legend' % self.reference_panels[reference_panel]['vcfgz'] % {'chromosome' : chromosome}
-			self.convert_vcf_to_IMPUTE2(reference_panel, chromosome)
+			print 'Converting: %s to hap and legend' % self.reference_panels[reference_panel][rformat] % {'chromosome' : chromosome}
+
+			if rformat == 'vcfgz':
+				self.convert_vcf_to_IMPUTE2(reference_panel, chromosome)
+			elif rformat == 'shapeithaps':
+				self.convert_SHAPEIT_to_IMPUTE2(reference_panel, chromosome)
+			else:
+				raise Exception('Invalid rformat value:' + str(rformat))
 			
 		print 'Checking if vcf index files exist..'
-		for chromosome in chromosomes:
-			if not os.path.isfile(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['vcfgz']  % {'chromosome' : chromosome} ).replace('vcf.gz', 'vcf.gz.tbi')):
-				self.build_vcf_index_file(reference_panel, chromosome)
+		if rformat == 'vcfgz':
+			for chromosome in chromosomes:
+				if not os.path.isfile(os.path.join(this_reference_dir, self.reference_panels[reference_panel]['vcfgz']  % {'chromosome' : chromosome} ).replace('vcf.gz', 'vcf.gz.tbi')):
+					self.build_vcf_index_file(reference_panel, chromosome)
 
 	def add_custom_reference_panels(self):
 		'''
@@ -1031,6 +1104,77 @@ class Imputation:
 					#Are there any vcf files that haven't been converted to .gz?
 					if not stem_vcf[0] and not stem_vcfgz[0]:
 						print 'Could not find *.vcf or *.vcf.gz files in %s' % self.reference_dir
+
+						print 'Looking for SHAPEIT files: *_SHAPEIT.haps and *_SHAPEIT.sample'
+						stem_shapeit_haps = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*_SHAPEIT.haps'))
+						stem_shapeit_sample = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*_SHAPEIT.sample'))
+
+						if stem_shapeit_haps[0] and stem_shapeit_sample[0]:
+							print 'Found SHAPEIT files: *_SHAPEIT.haps and *_SHAPEIT.sample files'
+							self.reference_panels[reference_name]['dir'] = reference_name
+							self.reference_panels[reference_name]['shapeithaps'] = stem_haps_dir.replace('.haps.gz', '_SHAPEIT.haps')
+							self.reference_panels[reference_name]['shapeitlegend'] = stem_haps_dir.replace('.haps.gz', '_SHAPEIT.sample')
+							self.reference_panels[reference_name]['hapsgz'] = stem_haps_dir
+							self.reference_panels[reference_name]['legendgz'] = stem_legend_dir
+							self.check_reference_panel_installation(reference_name)
+
+						else:
+							print 'Could not find SHAPEIT files: *_SHAPEIT.haps and *_SHAPEIT.sample'
+							print 'Looking for *.haps, *.legend and *.sample files'
+							stem_haps = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps'))
+							stem_legend = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend'))
+							stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps.gz'))
+							stem_legendgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend.gz'))
+							stem_sample = [x for x in glob.glob(os.path.join(dir_entry, '*.sample')) if '_SHAPEIT.sample' not in x]
+							can_convert_to_shapeit = False
+							if not stem_sample:
+								raise Exception('Could not find *.sample file in ' + dir_entry)
+							if len(stem_sample) > 1:
+								raise Exception('Multiple *.sample files found. Don\'t know which to use:' + str(stem_sample))
+							print 'Found sample file:', stem_sample[0]
+							if not stem_haps[0] or not stem_legend[0]:
+								print 'Could not find *.haps and *.legend files'
+							else:
+								print 'Found *.haps and *.legend files'
+								input_gzip = False
+								chromosome_haps = stem_haps[1]
+								stem_haps = stem_haps  #For uniformity
+								stem_legend = stem_legend
+								stem_haps_dir = os.path.join(reference_name_dir, stem_haps[0])
+								stem_legend_dir = os.path.join(reference_name_dir, stem_legend[0])
+								can_convert_to_shapeit = True
+
+							if not stem_hapsgz[0] or not stem_legendgz[0]:
+								print 'Coud not find *.haps.gz and *.legend.gz files'
+								print 'Neither VCF, SHAPEIT or IMPUTE2 files found in %s ..' % (reference_name_dir)
+							else:
+								print 'Found *.haps.gz and *.legend files'
+								input_gzip = True
+								chromosome_haps = stem_hapsgz[1]
+								stem_haps = stem_hapsgz
+								stem_legend = stem_legendgz
+								stem_haps_dir = os.path.join(reference_name_dir, stem_hapsgz[0])
+								stem_legend_dir = os.path.join(reference_name_dir, stem_legendgz[0])
+								can_convert_to_shapeit = True
+
+							if can_convert_to_shapeit:
+								for chromosome in chromosome_haps:
+									convert_impute2_reference_to_shapeit(
+										input_haps_filename = stem_haps_dir % {'chromosome' : chromosome_haps}, 
+										input_legend_filename = stem_legend_dir % {'chromosome' : chromosome_haps},
+										input_sample_filename = stem_sample[0],
+										output_haps_filename = (stem_haps_dir % {'chromosome' : chromosome_haps}).replace('.haps.gz', '_SHAPEIT.haps'),
+										output_sample_filename = (stem_haps_dir % {'chromosome' : chromosome_haps}).replace('.haps.gz', '_SHAPEIT.sample'),
+										chromosome = chromosome,
+										input_gzip = input_gzip,
+									)
+								self.reference_panels[reference_name]['dir'] = reference_name
+								self.reference_panels[reference_name]['shapeithaps'] = stem_hapsi[0].replace('.haps.gz', '_SHAPEIT.haps')
+								self.reference_panels[reference_name]['shapeitlegend'] = stem_haps[0].replace('.haps.gz', '_SHAPEIT.sample')
+								self.reference_panels[reference_name]['hapsgz'] = stem_haps[0]
+								self.reference_panels[reference_name]['legendgz'] = stem_legend[0]
+								self.check_reference_panel_installation(reference_name)
+								
 					elif not stem_vcfgz[0]:
 						print 'Could not find any *.vcf.gz but found *.vcf in %s' % self.reference_dir
 						print 'Converting vcf files to vcf.gz'
@@ -1046,7 +1190,7 @@ class Imputation:
 								print 'File %s has not been converted to ' % vcf_filename
 								self.convert_vcf_to_vcfgz(vcf_filename)
 
-					#Take all converted files
+					#Take all converted VCF files
 					stem = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.vcf.gz'))
 
 					if stem and stem[0]:
@@ -1055,8 +1199,7 @@ class Imputation:
 						self.reference_panels[reference_name]['legendgz'] = stem[0].replace('vcf.gz', 'legend.gz')
 						self.reference_panels[reference_name]['dir'] = reference_name
 						self.check_reference_panel_installation(reference_name)
-					else:
-						print 'Warning: Could not find *.vcf.gz files in %s' % (self.reference_dir) 
+
 
 	def list_reference_panels(self):
 		'''
