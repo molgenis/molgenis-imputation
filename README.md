@@ -162,11 +162,11 @@ You don't need to do anything else. The next time you run molgenis-impute.py it 
 This is the recommended way for installing a new reference panel. Alternatively, if you want to install your own .haps and .legend files, you can place them in a new directory under ```molgenis_imputation/resources/imputationReference```. Each chromosome should be in a separate pair of files. If the files are uncompressed the extension should be .haps and .legend . Optionally, the files can be compressed with gzip and the files' extensions should be: .haps.gz and .legend.gz . For example: 1000_GP_chr1.haps.gz and 1000_GP_chr1.legend.gz. Finally either the .vcf or the compressed .vcf.gz should also exist in this directory for each chromosome. **IMPORTANT:** The .vcf.gz files should **not** be compressed with gzip, but with bgzip instead. bgzip is installed in tools/tabix-0.2.6/ . 
 
 There are more alternative ways to install a reference panel. In general molgenis-impute supports the following reference panels formats:
-* [SHAPEIT2 Format](http://www.shapeit.fr/pages/m02_formats/hapssample.html): Files should be per chromosome. Example: chr1_SHAPEIT.haps and chr1_SHAPEIT.sample (The _SHAPEIT part if necessary in order ot make a distiction from impute2 .haps files)
+* [SHAPEIT2 Format](http://www.shapeit.fr/pages/m02_formats/hapssample.html): Files should be per chromosome. Example: chr1_SHAPEIT.haps and chr1_SHAPEIT.sample (The _SHAPEIT part is necessary in order to make a distiction from impute2 .haps files)
 * [Impute2 Format](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html#-h): Files shoud be per chromosome. Example: chr1.haps , chr1.legend . There should also be a SINGLE .sample file. 
 * [Impute2 Format](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html#-h) compressed: Files should be per chromosome. Example: chr1.haps.gz , chr1.legend.gz . There should also be a SINGLE .sample file (not compressed). This is the default format of the reference panels available from impute2. For example: http://mathgen.stats.ox.ac.uk/impute/data_download_1000G_phase1_integrated_SHAPEIT2_9-12-13.html 
 * VCF: A single vcf file.
-* VCF compressed. A single compressed (with bgzip NOT gzip). Example panel.vcf.gz
+* VCF compressed. A single compressed (with bgzip NOT gzip) vcf file. Example panel.vcf.gz
 
 For all these files molgenis-compute will try to do its best to apply the appropriate conversions before performing imputation. If you have a special request or you notice a bug please let me know!
 
