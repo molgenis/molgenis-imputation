@@ -83,6 +83,7 @@ if __name__ == '__main__':
 	parser.add_argument('--add_reference', help='Add a new reference panel', action='store_true')
 	parser.add_argument('--backend', help='Execution environment. Default: local', choices=['pbs',  'grid', 'local'], default='local')
 	parser.add_argument('--nosubmit', help='Create scripts but don\'t submit them for execution', action='store_true')
+	parser.add_argument('--java_executable', help='java executable. Default: java .This is useful when java is not in the PATH', default='java')
 	
 	args = parser.parse_args()
 
@@ -135,6 +136,7 @@ if __name__ == '__main__':
 				custom_chromosomes=args.chromosomes,
 				sample_batch_size=args.sample_batch_size,
 				position_batch_size=args.position_batch_size,
+				java_executable=args.java_executable,
 				backend=args.backend,
 				submit=not args.nosubmit)
 
