@@ -170,6 +170,8 @@ There are more alternative ways to install a reference panel. In general molgeni
 
 For all these files molgenis-compute will try to do its best to apply the appropriate conversions before performing imputation. If you have a special request or you notice a bug please let me know!
 
+To make use of the new reference in the imputation step use the option --reference < REFERENCE_NAME >. The < REFERENCE_NAME > is the name of the created directory under ```molgenis_imputation/resources/imputationReference``` . (If unsure run python molgenis-impute.py --list for a list of available reference panels)
+
 ## Additional parameters
 * ```--installation_dir```: set the installation directory for imputation tools and resources. Default: < currrent working dir >/molgenis_imputation 
 * ```--reference_dir```: set the installation directory for the imputation reference panels. Default: < currrent working dir >/molgenis_imputation/resources/imputationReference

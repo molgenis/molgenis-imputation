@@ -1407,6 +1407,7 @@ class Imputation:
 		sample_batch_size=500, 
 		position_batch_size=5000000,
 		custom_chromosomes=None,
+		java_executable='java',
 		backend='local', 
 		submit=True):
 		'''
@@ -1485,7 +1486,8 @@ class Imputation:
 			['toChrPos'] + [str(p[2]) for p in positions for sample_chunk in sample_chunks],
 			['fromSample'] + [str(sample_chunk[0]) for p in positions for sample_chunk in sample_chunks],
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
-			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks], 
+			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks],
+			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
 		]
 		
 		self.mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
