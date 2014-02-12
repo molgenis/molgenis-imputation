@@ -1,6 +1,6 @@
 
 """
-molgenis-impute v.0.9
+molgenis-impute v.0.9.1
 Alexandros Kanterakis, alexandros.kanterakis@gmail.com
 
 Please read:
@@ -9,7 +9,7 @@ Please read:
 
 """
 
-__version__ = '0.9'
+__version__ = '0.9.1'
 
 import os
 import sys
