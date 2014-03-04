@@ -62,6 +62,8 @@ Example:
 python molgenis-impute.py --dl_reference GIANT.metabo.phase1_release_v3.20101123
 ```
 
+*ATTENTION* This command will fail if you haven't installed the tools and datasets first, with the --dl_tools option. 
+
 ## Imputation study panel
 A study panel should be in plink's PED and MAP format: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml . Moreover, the PED/MAP files should be splitted per chromosome and stored in a single directory. For example:
 

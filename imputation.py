@@ -1028,6 +1028,17 @@ class Imputation:
 		The details of the reference panel should exist in the member dictionary: reference_panels
 		'''
 
+		#Check if reference_dir exists:
+		if not os.path.exists(self.reference_dir):
+			msg = """
+Error:
+Reference panel directory: %s does not exist
+In order to install a reference panel you first need to run:
+python molgenis_impute.py --dl_tools
+and make sure that it was completed without errors.
+""" % self.reference_dir
+			raise Exception(msg)
+	
 		if self.reference_panels.has_key(reference_panel):
 			self.install_tool_helper.install_tool(
 				self.reference_panels[reference_panel]['install_actions'],
