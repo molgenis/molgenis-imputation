@@ -917,8 +917,10 @@ class Imputation:
 	}
 
 	genotypeAligner = {
-		'link': 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.3.1-dist.tar.gz',
-		'file': 'GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		#'link': 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		#'file': 'GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		'link' : 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.4.9-dist.tar.gz',
+		'file' : 'GenotypeHarmonizer-1.4.9-dist.tar.gz',
 		'dir' : 'genotype_harmonizer',
 		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory']
 		}

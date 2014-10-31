@@ -25,6 +25,7 @@ molgenis-impute runs in any 64-bit x86 Linux distribution and it requires the fo
 
 For example, to set up the environment in Ubuntu you can run:
 ```
+sudo apt-get update
 sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev 
 ```
 
@@ -35,6 +36,11 @@ To install MOLGENIS-impute download the latest release from <a href="https://git
 
 For the .tar.gz file, uncompress it with: ```tar zxvf < FILENAME > ```. 
 For the .zip file, uncompress it with: ```unzip < FILENAME > ```. 
+
+To get the cutting edge latest version, clone this repository:
+```
+git clone https://github.com/kantale/molgenis-imputation.git 
+```
 
 Initially, run the following to download all necessary tools for imputation:
 ```
