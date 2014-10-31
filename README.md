@@ -129,11 +129,11 @@ The options that this command takes are:
 python molgenis-impute.py --list
 ```
 
-Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/Genotype-Harmonizer">Genotype Harmonizer</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. 
+Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/Genotype-Harmonizer">Genotype Harmonizer</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. This tool removes SNPs from the study that strand correction cannot be applied (for example an A/T SNP in the study that exists as A/C in the reference panel). It also generates a log file of all the performed checks that includes all removed markers. This file is saved in the defined output directory as: chrXYZ.log (XYZ is the number of chromosome, for example: chr1.log)
 
 The imputation task is split in many chunks. The split is 2-dimensional: according to genomic position and according to samples: 
 * The genomic position split is per 5.000.000 distance. You can change this with the ```--position_batch_size``` option.
-* The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. 
+* The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. The location of the BASH script that splits the data is: tools/molgenis-pipelines-master/compute5/Imputation_impute2/protocols/impute2Imputation.sh (denoted with the comment: #START OF SAMPLE SPLITTING).
 
 By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
 
@@ -187,6 +187,10 @@ To make use of the new reference in the imputation step use the option --referen
 * ```--reference_dir```: set the installation directory for the imputation reference panels. Default: < currrent working dir >/molgenis_imputation/resources/imputationReference
 * ```--nosubmit```: Do not submit for execution the generated scripts. 
 * ```--results```: Same as ```--output```
+* ```--additional_shapeit_parameters```: Additional parameters to pass to SHAPEIT2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_shapeit_parameters "--exclude-snp gwas.subset.site"```
+* ```--additional_impute2_parameters```: Additional parameters to be passed to IMPUTE2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_impute2_parameters "-Ne 20000"```
+
+The reason why the values of the last two parameters shoud be in quotation marks is that otherwise these values would be taken as parameters of the molgenis-impute.py script.
 
 ## Notes 
 All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.
