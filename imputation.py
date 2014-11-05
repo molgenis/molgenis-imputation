@@ -1407,7 +1407,7 @@ and make sure that it was completed without errors.
 		worksheet_data = [
 			['project'] + [self.mc.job_id for x in chromosomes],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : chromosome}) for chromosome in chromosomes],
-			['outputFolder'] + [results for chromosome in chromosomes],
+			['PhaseOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes],
 			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions])  for chromosome in chromosomes],
@@ -1493,7 +1493,7 @@ and make sure that it was completed without errors.
 			['vcf'] + [os.path.join(reference_dir, self.reference_panels[reference]['vcfgz'] % {'chromosome' : p[0]}).replace('.vcf.gz', '') for p in positions for sample_chunk in sample_chunks],
 			['refType'] + [refType for p in positions for sample_chunk in sample_chunks],
 			['additonalImpute2Param'] + [additional_impute2_parameters for p in positions for sample_chunk in sample_chunks],
-			['outputFolder'] + [results for p in positions for sample_chunk in sample_chunks],
+			['ImputeOutputFolder'] + [results for p in positions for sample_chunk in sample_chunks],
 			['chr'] + [p[0] for p in positions for sample_chunk in sample_chunks],
 			['fromChrPos'] + [str(p[1]) for p in positions for sample_chunk in sample_chunks],
 			['toChrPos'] + [str(p[2]) for p in positions for sample_chunk in sample_chunks],

@@ -190,7 +190,7 @@ To make use of the new reference in the imputation step use the option --referen
 * ```--additional_shapeit_parameters```: Additional parameters to pass to SHAPEIT2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_shapeit_parameters "--exclude-snp gwas.subset.site"```
 * ```--additional_impute2_parameters```: Additional parameters to be passed to IMPUTE2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_impute2_parameters "-Ne 20000"```
 
-The reason why the values of the last two parameters shoud be in quotation marks is that otherwise these values would be taken as parameters of the molgenis-impute.py script.
+The reason why the values of the last two parameters shoud be in quotation marks is that otherwise these values would be mistaken as parameters of the molgenis-impute.py script.
 
 ## Notes 
 All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.
