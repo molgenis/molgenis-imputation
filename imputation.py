@@ -1482,7 +1482,7 @@ and make sure that it was completed without errors.
 		else:
 			studyDataType = 'BED' # The output format from liftover
 			extensions = ['bed', 'bim', 'fam']
-			pedmap_pattern = 'chr{chromosome}.bed'
+			pedmap_pattern = 'chr%(chromosome)%.bed'
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for x in chromosomes],
