@@ -217,7 +217,7 @@ class Molgenis_compute:
 	}
 
 	parameters_names = {
-		'liftOver' : ['parameters_unique.csv'],
+		'liftover' : ['parameters_unique.csv'],
 		'phase' : ['parameters_unique.csv'],
 		'impute' : ['parameters_unique.csv'],
 		'phase_impute' : ['parameters_unique.csv',  os.path.join('../../../', pipeline_dir['phase'], 'parameters_unique.csv')],
@@ -326,7 +326,7 @@ class Molgenis_compute:
 			'--path', os.path.join(self.pipeline_root_directory, self.pipeline_dir[pipeline_name]),
 			'--workflow', self.workflow_names[pipeline_name],
 			'--parameters', 
-			os.path.join(self.pipeline_root_directory, self.constants),
+			os.path.join(self.pipeline_root_directory, self.constants_filename),
 			' '.join(self.parameters_names[pipeline_name]),
 			' '.join([self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_index) for worksheet_index in range(worksheet_length)]),
 			self.root_worksheet,
@@ -358,9 +358,11 @@ class Molgenis_compute:
 		Submit generated scripts
 		'''
 
+		#Remove empty worksheets
+		worksheet_data = [w for w in worksheet_data if w]
+
 		for worksheet_index, current_worksheet_data in enumerate(worksheet_data):
-			if current_worksheet_data:
-				self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
+			self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
 
 		self.create_root_worksheet(pipeline_name)
 
