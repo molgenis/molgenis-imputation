@@ -219,7 +219,7 @@ class Molgenis_compute:
 		'liftOver' : ['parameters.csv'],
 		'phase' : ['parameters.csv'],
 		'impute' : ['parameters.csv'],
-		'phase_impute' : ['parameters_unique.csv', os.path.join(self.pipeline_dir['phase'], 'parameters.csv')],
+		'phase_impute' : ['parameters_unique.csv', os.path.join(len(bioinformatics_file_helper.path_splitter(self.pipeline_dir['phase'])) * '../', pipeline_dir['phase'], 'parameters.csv')],
 	}
 
 	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
@@ -229,6 +229,9 @@ class Molgenis_compute:
 		root_directory: The directory for the generated scripts
 		tools_directory: The directory where the tools are installed
 		'''
+
+		print bioinformatics_file_helper.path_splitter(self.pipeline_dir['phase'])
+
 		self.job_id = self.get_job_id()
 		self.pipeline_root_directory = pipeline_root_directory
 		if root_directory:
@@ -753,6 +756,21 @@ class bioinformatics_file_helper:
 		bioinformatics_file_helper.close_file(read_from)
 
 	@staticmethod
+	def line_counter(filename):
+		'''
+		filename: a filename or open file
+		Returns the number of lines in filename
+		'''
+
+		line_g = bioinformatics_file_helper.line_generator(filename)
+
+		ret = None
+		for l in line_g:
+			ret = l[0]
+
+		return ret
+
+	@staticmethod
 	def column_generator(filename, batch_size=10000):
 		'''
 		filename: a filename or open file
@@ -864,6 +882,26 @@ class bioinformatics_file_helper:
 				print 'Delete: ', old_temp_filename
 		yield False
 
+	@staticmethod
+	def path_splitter(path):
+		'''
+		http://stackoverflow.com/questions/3167154/how-to-split-a-dos-path-into-its-components-in-python
+		'''
+
+		folders=[]
+		while True:
+			path,folder=os.path.split(path)
+
+			if folder!="":
+				folders.append(folder)
+			else:
+				if path!="":
+ 					folders.append(path)
+
+        			break
+
+		folders.reverse()
+		return folders
 
 
 import os
@@ -1407,12 +1445,14 @@ and make sure that it was completed without errors.
 			extensions = ['bed', 'bim', 'fam']
 			if chromosomes:
 				studyDataType = 'BED'
+				n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.fam'))
 
 		if not chromosomes and studyDataType != 'BED':
 			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
 			extensions = ['ped', 'map']
 			if chromosomes:
 				studyDataType = 'PED'
+				n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.ped'))
 
 		if not chromosomes:
 			if not studyDataType:
@@ -1425,13 +1465,13 @@ and make sure that it was completed without errors.
 			['PhaseOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes],
-			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions])  for chromosome in chromosomes],
+			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions]) for chromosome in chromosomes],
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
 
 		if return_worksheet:
 			#In case this is called by another function
-			return worksheet_data
+			return worksheet_data, n_samples, chromosomes
 		else:
 			self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
 
@@ -1477,10 +1517,39 @@ and make sure that it was completed without errors.
 
 		reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference]['dir'] )
 
-		haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
-		if not chromosomes:
-			raise Exception('Could not find any files named chr<1-22>.haps in %s' % study)
+		if perform_phase_argument:
+			#The name of the pipeline 
+			pipeline_name = 'phase_impute'
+			#This is the output of phase and the input of imputation
+			knownHapsG_dir = os.path.join(results, 'results_phase')
 
+			#Additional worksheet parameters for phasing
+			phase_worksheet_data, n_samples, chromosomes = self.perform_phase(study,
+				results = knownHapsG_dir,
+				studyDataType=None,
+				additional_shapeit_parameters=additional_shapeit_parameters,
+				backend=backend,
+				submit=False,
+				return_worksheet=True)
+
+			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]		
+
+		else:
+			#The name of the pipeline
+			pipeline_name = 'impute'
+			knownHapsG_dir = study
+			phase_worksheet_data = []
+
+			#Check if input files are in place
+			haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
+			if not chromosomes:
+				raise Exception('Could not find any files named chr<1-22>.haps in %s' % study)
+
+			#Get number of samples
+			with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
+				n_samples = (len(haps_pattern_f.readline().split())-5)/2
+
+	
 		#Check for custom chromosomes
 		if custom_chromosomes:
 			custom_chromosomes = custom_chromosomes.split(',')
@@ -1488,10 +1557,6 @@ and make sure that it was completed without errors.
 				if custom_chromosome not in chromosomes:
 					raise Exception('Cannot locate reference panel for requested chromosome: %s' % (str(custom_chromosome)))
 			chromosomes = custom_chromosomes
-
-		#Get number of samples
-		with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
-			n_samples = (len(haps_pattern_f.readline().split())-5)/2
 
 		sample_chunks = get_sample_chunks(n_samples)
 		sample_chunks_n = len(sample_chunks)
@@ -1505,27 +1570,6 @@ and make sure that it was completed without errors.
 			self.reference_panels[reference]['vcfgz'] = self.reference_panels[reference]['shapeithaps'].replace('.haps', '')
 		else:
 			raise Exception('Cannot find compatible reference panel')
-
-		if perform_phase_argument:
-			#In case we want to combine imputation with phasing 
-
-			#This is the output of phase and the input of imputation
-			knownHapsG_dir = os.path.join(results, 'results_phase')
-
-			#Additional worksheet parameters for phasing
-			phase_worksheet_data = self.perform_phase(study, 
-				results = knownHapsG,
-				studyDataType=None,
-				additional_shapeit_parameters=additional_shapeit_parameters,
-				backend=backend, 
-				submit=False,
-				return_worksheet=True)
-
-			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]
-
-		else:
-			phase_worksheet_data = []
-			knownHapsG_dir = study
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for p in positions for sample_chunk in sample_chunks],
@@ -1546,7 +1590,7 @@ and make sure that it was completed without errors.
 			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
 		] + phase_worksheet_data
 		
-		self.mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
+		self.mc.worksheet_generate_submit(pipeline_name, worksheet_data, backend, submit)
 
 	def perform_action(action, reference, study, results, backend):
 		'''
