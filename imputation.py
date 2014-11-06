@@ -1428,7 +1428,7 @@ and make sure that it was completed without errors.
 		chromosomes = stem_ped[1]
 
 		#Get the number of samples
-		n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(stem_ped % {'chromosome' : chromosomes[0]})[0] + '.ped'))
+		n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(stem_ped[0] % {'chromosome' : chromosomes[0]})[0] + '.ped'))
 
 		worksheet_data = [
 			['study'] + [self.mc.job_id for chromosome in chromosomes],
