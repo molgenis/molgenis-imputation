@@ -205,6 +205,21 @@ class Molgenis_compute:
 		'liftover' : 'molgenis-pipelines-master/compute5/Liftover_genome_build_PEDMAP',
 		'phase' : 'molgenis-pipelines-master/compute5/Imputation_shapeit_phasing',
 		'impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
+		'phase_impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
+	}
+
+	workflow_names = {
+		'liftover' : 'workflow.csv',
+		'phase' : 'workflow.csv',
+		'impute' : 'workflow.csv',
+		'phase_impute' : 'workflow_plus_phase.csv',
+	}
+
+	parameters_names = {
+		'liftOver' : ['parameters.csv'],
+		'phase' : ['parameters.csv'],
+		'impute' : ['parameters.csv'],
+		'phase_impute' : ['parameters_unique.csv', os.path.join(self.pipeline_dir['phase'], 'parameters.csv')],
 	}
 
 	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
@@ -303,8 +318,8 @@ class Molgenis_compute:
 			self.molgenis_compute_sh,
 			'--generate',
 			'--path', os.path.join(self.pipeline_root_directory, self.pipeline_dir[pipeline_name]),
-			'--workflow', 'workflow.csv',
-			'--parameters', 'parameters.csv',
+			'--workflow', self.workflow_names[pipeline_name],
+			'--parameters', ' '.join(self.parameters_names[pipeline_name]),
 			self.worksheet_path_filenamer(pipeline_name, job_id),
 			self.root_worksheet,
 			'--rundir', self.generated_dir_namer(pipeline_name, job_id),
@@ -1375,7 +1390,7 @@ and make sure that it was completed without errors.
 
 		self.mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
 
-	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True):
+	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True, return_worksheet=False):
 		'''
 		Generates and submits the phasing scripts
 		studyDataType can take the following values: 
@@ -1414,9 +1429,16 @@ and make sure that it was completed without errors.
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
 
-		self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
+		if return_worksheet:
+			#In case this is called by another function
+			return worksheet_data
+		else:
+			self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
 
-	def perform_impute(self, study, results, reference, additional_impute2_parameters=' ', 
+	def perform_impute(self, study, results, reference, 
+		additional_impute2_parameters=' ', 
+		additional_shapeit_parameters=' ',
+		perform_phase_argument=False,
 		sample_batch_size=500, 
 		position_batch_size=5000000,
 		custom_chromosomes=None,
@@ -1438,7 +1460,7 @@ and make sure that it was completed without errors.
 
 			ret = []
 			for r in range(1, n, ratio):
-				if  n-r-ratio+1 < ratio:
+				if n-r-ratio+1 < ratio:
 					ret += [[r, n]]
 					break
 				else:
@@ -1484,9 +1506,30 @@ and make sure that it was completed without errors.
 		else:
 			raise Exception('Cannot find compatible reference panel')
 
+		if perform_phase_argument:
+			#In case we want to combine imputation with phasing 
+
+			#This is the output of phase and the input of imputation
+			knownHapsG_dir = os.path.join(results, 'results_phase')
+
+			#Additional worksheet parameters for phasing
+			phase_worksheet_data = self.perform_phase(study, 
+				results = knownHapsG,
+				studyDataType=None,
+				additional_shapeit_parameters=additional_shapeit_parameters,
+				backend=backend, 
+				submit=False,
+				return_worksheet=True)
+
+			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]
+
+		else:
+			phase_worksheet_data = []
+			knownHapsG_dir = study
+
 		worksheet_data = [
 			['project'] + [self.mc.job_id for p in positions for sample_chunk in sample_chunks],
-			['knownHapsG'] + [os.path.join(study, 'chr%s.haps' % p[0]) for p in positions for sample_chunk in sample_chunks],
+			['knownHapsG'] + [os.path.join(knownHapsG_dir, 'chr%s.haps' % p[0]) for p in positions for sample_chunk in sample_chunks],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['h'] + [os.path.join(reference_dir, self.reference_panels[reference]['hapsgz'] % {'chromosome'  : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['l'] + [os.path.join(reference_dir, self.reference_panels[reference]['legendgz'] % {'chromosome' : p[0]}) for p in positions for sample_chunk in sample_chunks],
@@ -1501,7 +1544,7 @@ and make sure that it was completed without errors.
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
 			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks],
 			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
-		]
+		] + phase_worksheet_data
 		
 		self.mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
 
