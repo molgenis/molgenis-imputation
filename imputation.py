@@ -213,14 +213,18 @@ class Molgenis_compute:
 		'phase' : 'workflow.csv',
 		'impute' : 'workflow.csv',
 		'phase_impute' : 'workflow_plus_phase.csv',
+		'liftover_phase_impute' : 'workflow_plus_liftover_phase.csv',
 	}
 
 	parameters_names = {
-		'liftOver' : ['parameters.csv'],
-		'phase' : ['parameters.csv'],
-		'impute' : ['parameters.csv'],
-		'phase_impute' : ['parameters_unique.csv',  os.path.join('../../../', pipeline_dir['phase'], 'parameters.csv')],
+		'liftOver' : ['parameters_unique.csv'],
+		'phase' : ['parameters_unique.csv'],
+		'impute' : ['parameters_unique.csv'],
+		'phase_impute' : ['parameters_unique.csv',  os.path.join('../../../', pipeline_dir['phase'], 'parameters_unique.csv')],
+		'liftover_phase_impute' : ['parameters_unique.csv', os.path.join('../../../', pipeline_dir['liftover'], 'parameters_unique.csv'),  os.path.join('../../../', pipeline_dir['phase'], 'parameters_unique.csv')],
 	}
+
+	constants_filename = 'molgenis-pipelines-master/compute5/Imputation_impute2/constants.csv'
 
 	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
 		'''
@@ -321,7 +325,9 @@ class Molgenis_compute:
 			'--generate',
 			'--path', os.path.join(self.pipeline_root_directory, self.pipeline_dir[pipeline_name]),
 			'--workflow', self.workflow_names[pipeline_name],
-			'--parameters', ' '.join(self.parameters_names[pipeline_name]),
+			'--parameters', 
+			os.path.join(self.pipeline_root_directory, self.constants),
+			' '.join(self.parameters_names[pipeline_name]),
 			' '.join([self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_index) for worksheet_index in range(worksheet_length)]),
 			self.root_worksheet,
 			'--rundir', self.generated_dir_namer(pipeline_name, job_id),
@@ -353,7 +359,8 @@ class Molgenis_compute:
 		'''
 
 		for worksheet_index, current_worksheet_data in enumerate(worksheet_data):
-			self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
+			if current_worksheet_data:
+				self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
 
 		self.create_root_worksheet(pipeline_name)
 
@@ -1405,7 +1412,7 @@ and make sure that it was completed without errors.
 			for from_pos in range(1, length, position_interval):
 				yield (chromosome, from_pos, from_pos + position_interval - 1)
 
-	def perform_liftover(self, study, results, backend='local', submit=True):
+	def perform_liftover(self, study, results, backend='local', submit=True, return_worksheet=False):
 		'''
 		Generates and submits the liftover scripts
 		'''
@@ -1420,17 +1427,24 @@ and make sure that it was completed without errors.
 
 		chromosomes = stem_ped[1]
 
+		#Get the number of samples
+		n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(stem_ped % {'chromosome' : chromosomes[0]})[0] + '.ped'))
+
 		worksheet_data = [
 			['study'] + [self.mc.job_id for chromosome in chromosomes],
 			['studyInputDir'] + [study for chromosome in chromosomes],
 			['liftOverChainFile'] + [os.path.join(self.cwd, self.hg18tohg19_chain) for chromosome in chromosomes],
-			['outputFolder'] + [results for chromosome in chromosomes],
+			['LiftoverOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 		]
 
-		self.mc.worksheet_generate_submit('liftover', [worksheet_data], backend, submit)
+		if return_worksheet:
+			return worksheet_data, n_samples, chromosomes
+		else:
+			self.mc.worksheet_generate_submit('liftover', [worksheet_data], backend, submit)
 
-	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True, return_worksheet=False):
+
+	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True, return_worksheet=False, chromosomes=None, n_samples=None):
 		'''
 		Generates and submits the phasing scripts
 		studyDataType can take the following values: 
@@ -1438,28 +1452,33 @@ and make sure that it was completed without errors.
 			PED : for text plink files
 		'''
 		
-		chromosomes = None
-		if studyDataType not in ['BED', 'PED', None]:
-			raise Exception('Unknown value for parameter studyDataType: ' + str(studyDataType))
-
-		if studyDataType != 'PED':
-			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
-			extensions = ['bed', 'bim', 'fam']
-			if chromosomes:
-				studyDataType = 'BED'
-				n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.fam'))
-
-		if not chromosomes and studyDataType != 'BED':
-			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
-			extensions = ['ped', 'map']
-			if chromosomes:
-				studyDataType = 'PED'
-				n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.ped'))
-
 		if not chromosomes:
-			if not studyDataType:
-				studyDataType = '{bed,map}'
-			raise Exception('Could not find any files named *chr<CHROMOSOME>*.%s in study dir: %s' % (studyDataType.lower(), study))
+			#Perform check of input files
+			chromosomes = None
+			if studyDataType not in ['BED', 'PED', None]:
+				raise Exception('Unknown value for parameter studyDataType: ' + str(studyDataType))
+
+			if studyDataType != 'PED':
+				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
+				extensions = ['bed', 'bim', 'fam']
+				if chromosomes:
+					studyDataType = 'BED'
+					n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.fam'))
+
+			if not chromosomes and studyDataType != 'BED':
+				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
+				extensions = ['ped', 'map']
+				if chromosomes:
+					studyDataType = 'PED'
+					n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.ped'))
+
+			if not chromosomes:
+				if not studyDataType:
+					studyDataType = '{bed,map}'
+				raise Exception('Could not find any files named *chr<CHROMOSOME>*.%s in study dir: %s' % (studyDataType.lower(), study))
+		else:
+			studyDataType = 'BED' # The output format from liftover
+			extensions = ['bed', 'bim', 'fam']
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for x in chromosomes],
@@ -1480,6 +1499,7 @@ and make sure that it was completed without errors.
 	def perform_impute(self, study, results, reference, 
 		additional_impute2_parameters=' ', 
 		additional_shapeit_parameters=' ',
+		perform_liftover_argument=False,
 		perform_phase_argument=False,
 		sample_batch_size=500, 
 		position_batch_size=5000000,
@@ -1519,7 +1539,41 @@ and make sure that it was completed without errors.
 
 		reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference]['dir'] )
 
-		if perform_phase_argument:
+		phase_worksheet_data = []
+		liftover_worksheet_data = []
+		if perform_liftover_argument:
+			#The name of the pipeline
+			pipeline_name = 'liftover_phase_impute'
+
+			#This is the output of liftover and the input to phase
+			liftover_output_dir = os.path.join(results, 'results_liftover')
+
+			liftover_worksheet_data, n_samples, chromosomes = self.perform_liftover(study, 
+				results=liftover_output_dir, 
+				backend=backend, 
+				submit=False, 
+				return_worksheet=True)
+
+			liftover_worksheet_data = [x for x in liftover_worksheet_data if x[0] in ['study', 'studyInputDir', 'liftOverChainFile', 'LiftoverOutputFolder']]
+
+			#This is the output of phase and the input of imputation
+			knownHapsG_dir = os.path.join(results, 'results_phase')
+
+			phase_worksheet_data, n_samples, chromosomes = self.perform_phase(
+				study=liftover_output_dir,
+				results = knownHapsG_dir,
+				studyDataType=None,
+				additional_shapeit_parameters=additional_shapeit_parameters,
+				backend=backend,
+				submit=False,
+				return_worksheet=True,
+				chromosomes=chromosomes, #Do not check for input files
+				n_samples=n_samples)
+
+			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]
+
+		elif perform_phase_argument:
+
 			#The name of the pipeline 
 			pipeline_name = 'phase_impute'
 			#This is the output of phase and the input of imputation
@@ -1540,7 +1594,6 @@ and make sure that it was completed without errors.
 			#The name of the pipeline
 			pipeline_name = 'impute'
 			knownHapsG_dir = study
-			phase_worksheet_data = []
 
 			#Check if input files are in place
 			haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
@@ -1592,7 +1645,7 @@ and make sure that it was completed without errors.
 			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
 		]
 
-		self.mc.worksheet_generate_submit(pipeline_name, [worksheet_data, phase_worksheet_data], backend, submit)
+		self.mc.worksheet_generate_submit(pipeline_name, [worksheet_data, phase_worksheet_data, liftover_worksheet_data], backend, submit)
 
 	def perform_action(action, reference, study, results, backend):
 		'''

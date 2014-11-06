@@ -79,7 +79,7 @@ if __name__ == '__main__':
 	parser.add_argument('--position_batch_size', help='Size of the chromosomal size of each imputation batch', default=5000000, type=int)
 	parser.add_argument('--sample_batch_size', help='Minimum number of samples in imputation batches', default=500, type=int)
 	parser.add_argument('--reference', help='name of the imputation reference panel')
-	parser.add_argument('--action', help='Action to do: liftover, phase, impute', choices=['liftover', 'phase', 'impute', 'phase_impute'])
+	parser.add_argument('--action', help='Action to do: liftover, phase, impute', choices=['liftover', 'phase', 'impute', 'phase_impute', 'liftover_phase_impute'])
 	parser.add_argument('--add_reference', help='Add a new reference panel', action='store_true')
 	parser.add_argument('--backend', help='Execution environment. Default: local', choices=['pbs',  'grid', 'local'], default='local')
 	parser.add_argument('--nosubmit', help='Create scripts but don\'t submit them for execution', action='store_true')
@@ -127,13 +127,14 @@ if __name__ == '__main__':
 		elif args.action == 'phase':
 			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend, submit=not args.nosubmit)
 
-		elif args.action == 'impute' or args.action == 'phase_impute':
+		elif args.action == 'impute' or args.action == 'phase_impute' or args.action == 'liftover_phase_impute':
 			if not args.reference:
 				raise Exception('You need to define a reference panel. Use the --reference parameter. For a list for all available reference panels, use --list')
 
 			imp.perform_impute(args.study, args.output, args.reference, 
 					additional_impute2_parameters=args.additional_impute2_parameters, 
 					additional_shapeit_parameters=args.additional_impute2_parameters,
+					perform_liftover_argument=args.action == 'liftover_phase_impute',
 					perform_phase_argument=args.action == 'phase_impute',
 					custom_chromosomes=args.chromosomes,
 					sample_batch_size=args.sample_batch_size,
