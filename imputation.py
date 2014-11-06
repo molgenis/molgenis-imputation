@@ -219,7 +219,7 @@ class Molgenis_compute:
 		'liftOver' : ['parameters.csv'],
 		'phase' : ['parameters.csv'],
 		'impute' : ['parameters.csv'],
-		'phase_impute' : ['parameters_unique.csv', os.path.join(len(bioinformatics_file_helper.path_splitter(self.pipeline_dir['phase'])) * '../', pipeline_dir['phase'], 'parameters.csv')],
+		'phase_impute' : ['parameters_unique.csv',  os.path.join('../../../', pipeline_dir['phase'], 'parameters.csv')],
 	}
 
 	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
@@ -229,8 +229,6 @@ class Molgenis_compute:
 		root_directory: The directory for the generated scripts
 		tools_directory: The directory where the tools are installed
 		'''
-
-		print bioinformatics_file_helper.path_splitter(self.pipeline_dir['phase'])
 
 		self.job_id = self.get_job_id()
 		self.pipeline_root_directory = pipeline_root_directory
@@ -257,20 +255,20 @@ class Molgenis_compute:
 		
 		return '\n'.join([','.join(x) for x in map(list, zip(*worksheet_data))]) + '\n'
 
-	def worksheet_filenamer(self, job_id):
+	def worksheet_filenamer(self, job_id, worksheet_id):
 		'''
 		Creates a worksheet filename
 		'''
-		return 'worksheet_' + job_id + '.csv'
+		return 'worksheet_' + job_id + '_' + str(worksheet_id) + '.csv'
 
-	def worksheet_path_filenamer(self, pipeline_name, job_id):
+	def worksheet_path_filenamer(self, pipeline_name, job_id, worksheet_id):
 		'''
 		Returns the full path of a worksheet
 		'''
 		worksheet_path = self.generated_dir_namer(pipeline_name, job_id) 
 		#Make sure this directory exists
 		self.install_tool_helper.mkdir(worksheet_path, ignore_if_exist=True)
-		worksheet_filename = self.worksheet_filenamer(job_id)
+		worksheet_filename = self.worksheet_filenamer(job_id, worksheet_id)
 		return os.path.join(worksheet_path, worksheet_filename)
 
 	def worksheet_saver(self, worksheet_filename, worksheet_data, verbose=True):
@@ -282,11 +280,11 @@ class Molgenis_compute:
 		worksheet_file.write(self.worksheet_writer(worksheet_data))
 		worksheet_file.close()
 
-	def create_worksheet(self, job_id, pipeline_name, worksheet_data, verbose=True):
+	def create_worksheet(self, job_id, pipeline_name, worksheet_data, worksheet_id, verbose=True):
 		'''
 		Creates the worksheet file
 		'''
-		worksheet_filename_path = self.worksheet_path_filenamer(pipeline_name, job_id)
+		worksheet_filename_path = self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_id)
 		self.worksheet_saver(worksheet_filename_path, worksheet_data, verbose)
 
 	def generated_dir_namer(self, pipeline_name, job_id):
@@ -312,10 +310,11 @@ class Molgenis_compute:
 		'''
 		return os.path.join(self.root_directory, results_dir, pipeline_name  + '_' + job_id)
 
-	def molgenis_command_formatter(self, pipeline_name, job_id, backend):
+	def molgenis_command_formatter(self, pipeline_name, job_id, worksheet_length, backend):
 		'''
 		Format the command that generates the scripts
 		'''
+
 		command = [
 			'sh',
 			self.molgenis_compute_sh,
@@ -323,7 +322,7 @@ class Molgenis_compute:
 			'--path', os.path.join(self.pipeline_root_directory, self.pipeline_dir[pipeline_name]),
 			'--workflow', self.workflow_names[pipeline_name],
 			'--parameters', ' '.join(self.parameters_names[pipeline_name]),
-			self.worksheet_path_filenamer(pipeline_name, job_id),
+			' '.join([self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_index) for worksheet_index in range(worksheet_length)]),
 			self.root_worksheet,
 			'--rundir', self.generated_dir_namer(pipeline_name, job_id),
 			'--backend', backend,
@@ -353,9 +352,12 @@ class Molgenis_compute:
 		Submit generated scripts
 		'''
 
-		self.create_worksheet(self.job_id, pipeline_name, worksheet_data, verbose=True)
+		for worksheet_index, current_worksheet_data in enumerate(worksheet_data):
+			self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
+
 		self.create_root_worksheet(pipeline_name)
-		command = self.molgenis_command_formatter(pipeline_name, self.job_id, backend)
+
+		command = self.molgenis_command_formatter(pipeline_name, self.job_id, len(worksheet_data), backend)
 
 		self.install_tool_helper.execute(' '.join(command))
 
@@ -1426,7 +1428,7 @@ and make sure that it was completed without errors.
 			['chr'] + chromosomes,
 		]
 
-		self.mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
+		self.mc.worksheet_generate_submit('liftover', [worksheet_data], backend, submit)
 
 	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True, return_worksheet=False):
 		'''
@@ -1473,7 +1475,7 @@ and make sure that it was completed without errors.
 			#In case this is called by another function
 			return worksheet_data, n_samples, chromosomes
 		else:
-			self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
+			self.mc.worksheet_generate_submit('phase', [worksheet_data], backend, submit)
 
 	def perform_impute(self, study, results, reference, 
 		additional_impute2_parameters=' ', 
@@ -1588,9 +1590,9 @@ and make sure that it was completed without errors.
 			['toSample'] + [str(sample_chunk[1]) for p in positions for sample_chunk in sample_chunks],
 			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks],
 			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
-		] + phase_worksheet_data
-		
-		self.mc.worksheet_generate_submit(pipeline_name, worksheet_data, backend, submit)
+		]
+
+		self.mc.worksheet_generate_submit(pipeline_name, [worksheet_data, phase_worksheet_data], backend, submit)
 
 	def perform_action(action, reference, study, results, backend):
 		'''
