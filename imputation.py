@@ -206,6 +206,7 @@ class Molgenis_compute:
 		'phase' : 'molgenis-pipelines-master/compute5/Imputation_shapeit_phasing',
 		'impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
 		'phase_impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
+		'liftover_phase_impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
 	}
 
 	workflow_names = {
