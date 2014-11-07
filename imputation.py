@@ -1029,8 +1029,8 @@ class Imputation:
 
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'
 	assembly_chains = {
-		'hg18tohg19' : 'resources/liftover/hg18ToHg19.over.chain' # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz 
-		'hg18ToHg38' : 'resources/liftover/hg18ToHg38.over.chain' # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg38.over.chain.gz
+		'hg18tohg19' : 'resources/liftover/hg18ToHg19.over.chain', # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz 
+		'hg18ToHg38' : 'resources/liftover/hg18ToHg38.over.chain', # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg38.over.chain.gz
 	}
 	reference_dir = 'resources/imputationReference'
 	tools_dir = 'tools'
