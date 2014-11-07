@@ -99,6 +99,7 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 * ...
 
 The result of this process is in binary plink format.
+By default the liftover that is performed is from hg18ToHg19. You can change the assembly by using the argument ```--assembly``` . The accepted values are: hg18tohg19 and hg18ToHg38. Alternatively you can specify your own chain filename with the same argument. A repository of genomic assembly chain files is here: http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/ . For example you can download the hg18ToEquCab1.over.chain.gz , save it to a local directory and use the option: ```--assembly /path/to/hg18ToEquCab1.over.chain.gz```
 
 ## Phasing (Step 2)
 Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. Moreover files should be **aligned in the hg19 genetic reference**. The command is:
@@ -152,6 +153,10 @@ For example:
 python molgenis-impute.py --study `pwd`/results_liftover --reference test_reference --output `pwd`/results_impute --action phase_impute
 ```
 ### Liftover + Phase + Impute 
+To combine all three steps use the option: ```--action liftover_phase_impute```
+```
+python molgenis-impute.py --study < STUDY DIRECTORY > --reference < REFERENCE NAME > --output < OUTPUT DIRECTORY > --action liftover_phase_impute
+```
 For example:
 ```
 python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --reference test_reference --output `pwd`/results_impute --action liftover_phase_impute

@@ -298,14 +298,14 @@ class Molgenis_compute:
 		'''
 		return os.path.join(self.root_directory, pipeline_name) + '_' + job_id
 		
-	def create_root_worksheet(self, pipeline_name):
+	def create_root_worksheet(self, pipeline_name, job_id):
 		'''
 		Saves the information of the root directory for all files and tools in the pipelines
 		'''
 		root_worksheet = os.path.join(self.generated_dir_namer(pipeline_name, self.job_id), 'root_' + self.job_id + '.csv')
 		with open(root_worksheet, 'w') as root_worksheet_f:
-			root_worksheet_f.write('root\n')
-			root_worksheet_f.write(self.tools_directory)
+			root_worksheet_f.write('root,randomUUID\n')
+			root_worksheet_f.write(self.tools_directory + ',' + job_id)
 			
 		self.root_worksheet = root_worksheet
 
@@ -365,7 +365,7 @@ class Molgenis_compute:
 		for worksheet_index, current_worksheet_data in enumerate(worksheet_data):
 			self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
 
-		self.create_root_worksheet(pipeline_name)
+		self.create_root_worksheet(pipeline_name, self.job_id)
 
 		command = self.molgenis_command_formatter(pipeline_name, self.job_id, len(worksheet_data), backend)
 
@@ -1028,7 +1028,10 @@ class Imputation:
 		}
 
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'
-	hg18tohg19_chain = 'resources/liftover/hg18ToHg19.over.chain'
+	assembly_chains = {
+		'hg18tohg19' : 'resources/liftover/hg18ToHg19.over.chain' # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz 
+		'hg18ToHg38' : 'resources/liftover/hg18ToHg38.over.chain' # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg38.over.chain.gz
+	}
 	reference_dir = 'resources/imputationReference'
 	tools_dir = 'tools'
 	molgenis_compute_dir = 'molgenis-compute'
@@ -1415,7 +1418,7 @@ and make sure that it was completed without errors.
 			for from_pos in range(1, length, position_interval):
 				yield (chromosome, from_pos, from_pos + position_interval - 1)
 
-	def perform_liftover(self, study, results, backend='local', submit=True, return_worksheet=False):
+	def perform_liftover(self, study, results, assembly='hg18ToHg19', backend='local', submit=True, return_worksheet=False):
 		'''
 		Generates and submits the liftover scripts
 		'''
@@ -1433,10 +1436,16 @@ and make sure that it was completed without errors.
 		#Get the number of samples
 		n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(stem_ped[0] % {'chromosome' : chromosomes[0]})[0] + '.ped'))
 
+		if self.assembly_chains.has_key(assembly):
+			assembly_filename = self.assembly_chains[assembly]
+		else:
+			print 'Using custom assembly filename: ', str(assembly)
+			assembly_filename = assembly
+
 		worksheet_data = [
 			['study'] + [self.mc.job_id for chromosome in chromosomes],
 			['studyInputDir'] + [study for chromosome in chromosomes],
-			['liftOverChainFile'] + [os.path.join(self.cwd, self.hg18tohg19_chain) for chromosome in chromosomes],
+			['liftOverChainFile'] + [os.path.join(self.cwd, assembly_filename) for chromosome in chromosomes],
 			['LiftoverOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 		]
@@ -1507,6 +1516,7 @@ and make sure that it was completed without errors.
 		perform_phase_argument=False,
 		sample_batch_size=500, 
 		position_batch_size=5000000,
+		assembly='hg18ToHg19',
 		custom_chromosomes=None,
 		java_executable='java',
 		backend='local', 
@@ -1555,6 +1565,7 @@ and make sure that it was completed without errors.
 			liftover_worksheet_data, n_samples, chromosomes = self.perform_liftover(study, 
 				results=liftover_output_dir, 
 				backend=backend, 
+				assembly=assembly,
 				submit=False, 
 				return_worksheet=True)
 
