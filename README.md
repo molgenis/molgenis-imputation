@@ -25,6 +25,7 @@ molgenis-impute runs in any 64-bit x86 Linux distribution and it requires the fo
 
 For example, to set up the environment in Ubuntu you can run:
 ```
+sudo apt-get update
 sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev 
 ```
 
@@ -35,6 +36,11 @@ To install MOLGENIS-impute download the latest release from <a href="https://git
 
 For the .tar.gz file, uncompress it with: ```tar zxvf < FILENAME > ```. 
 For the .zip file, uncompress it with: ```unzip < FILENAME > ```. 
+
+To get the cutting edge latest version, clone this repository:
+```
+git clone https://github.com/kantale/molgenis-imputation.git 
+```
 
 Initially, run the following to download all necessary tools for imputation:
 ```
@@ -93,6 +99,7 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 * ...
 
 The result of this process is in binary plink format.
+By default the liftover that is performed is from hg18ToHg19. You can change the assembly by using the argument ```--assembly``` . The accepted values are: hg18tohg19 and hg18ToHg38. Alternatively you can specify your own chain filename with the same argument. A repository of genomic assembly chain files is here: http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/ . For example you can download the hg18ToEquCab1.over.chain.gz , save it to a local directory and use the option: ```--assembly /path/to/hg18ToEquCab1.over.chain.gz```
 
 ## Phasing (Step 2)
 Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. Moreover files should be **aligned in the hg19 genetic reference**. The command is:
@@ -123,11 +130,11 @@ The options that this command takes are:
 python molgenis-impute.py --list
 ```
 
-Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/Genotype-Harmonizer">Genotype Harmonizer</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. 
+Under the hood molgenis-impute uses <a href="https://github.com/molgenis/systemsgenetics/tree/master/Genotype-Harmonizer">Genotype Harmonizer</a> for quality control and <a href="http://mathgen.stats.ox.ac.uk/impute/impute_v2.html">impute2</a> tool for imputation. This tool removes SNPs from the study that strand correction cannot be applied (for example an A/T SNP in the study that exists as A/C in the reference panel). It also generates a log file of all the performed checks that includes all removed markers. This file is saved in the defined output directory as: chrXYZ.log (XYZ is the number of chromosome, for example: chr1.log)
 
 The imputation task is split in many chunks. The split is 2-dimensional: according to genomic position and according to samples: 
 * The genomic position split is per 5.000.000 distance. You can change this with the ```--position_batch_size``` option.
-* The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. 
+* The sample split is done so that each chunk should have approximately the same number of samples. The default setting is that each sample chunk should have at least 500 samples but not more than twice this value (1000=2*500). To change the default value of 500, use the ```--sample_batch_size```option. The location of the BASH script that splits the data is: tools/molgenis-pipelines-master/compute5/Imputation_impute2/protocols/impute2Imputation.sh (denoted with the comment: #START OF SAMPLE SPLITTING).
 
 By default molgenis-impute will perform imputation for all chromosomes located in the reference panel. You can limit the imputation chromosomes with the option ```--chromosomes < comma separated values of chromosomes >``` For example: ```--chromosomes 1,3,8```
 
@@ -135,7 +142,28 @@ If the reference panel is not in the default directory (the < current directory 
 
 By default molgenis-impute assumes that java is in the PATH of the execution system. If this is not the case, use the option ```--java_executable``` to define the path to java executable. For example: ```--java_executable /path/to/java```
 
-## Example
+## Combining steps in one run:
+### Phase + Impute 
+The Phase and Impute Steps (Step 2 and 3) can be combined with the option ```--action phase_impute```
+```
+python molgenis-impute.py --study < STUDY DIRECTORY > --reference < REFERENCE NAME > --output < OUTPUT DIRECTORY >  --action phase_impute  
+```  
+For example:
+```
+python molgenis-impute.py --study `pwd`/results_liftover --reference test_reference --output `pwd`/results_impute --action phase_impute
+```
+### Liftover + Phase + Impute 
+To combine all three steps use the option: ```--action liftover_phase_impute```
+```
+python molgenis-impute.py --study < STUDY DIRECTORY > --reference < REFERENCE NAME > --output < OUTPUT DIRECTORY > --action liftover_phase_impute
+```
+For example:
+```
+python molgenis-impute.py --study `pwd`/molgenis_imputation/resources/GWAS/small/ --reference test_reference --output `pwd`/results_impute --action liftover_phase_impute
+```
+
+
+## Examples
 The molgenis-impute distribution includes an example study panel. This panel is part of the HapMap3 release 2 dataset (first 100 samples, first 10Mbp) and is located in the ```resources/GWAS/small``` directory. For more info about this test dataset you can take a look at resources/GWAS/small/README.md. You can impute this dataset with a subset of GIANT release of 1000 Genomes Project that is also included in the distribution in the directory ```resources/imputationReference/test_reference/```
 * liftover from hg18 to hg19:
 
@@ -181,6 +209,19 @@ To make use of the new reference in the imputation step use the option --referen
 * ```--reference_dir```: set the installation directory for the imputation reference panels. Default: < currrent working dir >/molgenis_imputation/resources/imputationReference
 * ```--nosubmit```: Do not submit for execution the generated scripts. 
 * ```--results```: Same as ```--output```
+* ```--additional_shapeit_parameters```: Additional parameters to pass to SHAPEIT2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_shapeit_parameters "--exclude-snp gwas.subset.site"```
+* ```--additional_impute2_parameters```: Additional parameters to be passed to IMPUTE2 tool. These parameters should be quoted with single(') or double (") quotation marks. For example: ```--additional_impute2_parameters "-Ne 20000"```
+
+The reason why the values of the last two parameters shoud be in quotation marks is that otherwise these values would be mistaken as parameters of the molgenis-impute.py script.
+
+## Accessing the generated scripts and intermediate temporary files
+After a successful submission, MOLGENIS-impute prints a random generated ID and the location of the generated scripts. For example:
+```
+RANDOM ID FOR THIS RUN WAS:  f0935de6
+Generated scripts are saved in:  /home/ubuntu/molgenis-imputation/molgenis_imputation/generated/impute_f0935de6
+```
+This means that the generated temporary (or intermediate) files of the analysis are stored in the folder: < OUTPUT FOLDER >/tmp_< ID > . Where < OUTPUT FOLDER > is the folder declared with the ```--output``` parameter and < ID > is the generated ID . Inspection of these files can sometimes give important insights regarding the performed analysis.
+The location of the generated scripts contains all scripts that have been submitted to the cluster. The same location is used to save the standard output and standard error from the execution of the scripts (if the cluster supports this functionality). 
 
 ## Notes 
 All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.

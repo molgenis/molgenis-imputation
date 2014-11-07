@@ -205,7 +205,27 @@ class Molgenis_compute:
 		'liftover' : 'molgenis-pipelines-master/compute5/Liftover_genome_build_PEDMAP',
 		'phase' : 'molgenis-pipelines-master/compute5/Imputation_shapeit_phasing',
 		'impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
+		'phase_impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
+		'liftover_phase_impute' : 'molgenis-pipelines-master/compute5/Imputation_impute2',
 	}
+
+	workflow_names = {
+		'liftover' : 'workflow.csv',
+		'phase' : 'workflow.csv',
+		'impute' : 'workflow.csv',
+		'phase_impute' : 'workflow_plus_phase.csv',
+		'liftover_phase_impute' : 'workflow_plus_liftover_phase.csv',
+	}
+
+	parameters_names = {
+		'liftover' : ['parameters_unique.csv'],
+		'phase' : ['parameters_unique.csv'],
+		'impute' : ['parameters_unique.csv'],
+		'phase_impute' : ['parameters_unique.csv',  os.path.join('../../../', pipeline_dir['phase'], 'parameters_unique.csv')],
+		'liftover_phase_impute' : ['parameters_unique.csv', os.path.join('../../../', pipeline_dir['liftover'], 'parameters_unique.csv'),  os.path.join('../../../', pipeline_dir['phase'], 'parameters_unique.csv')],
+	}
+
+	constants_filename = 'molgenis-pipelines-master/compute5/Imputation_impute2/constants.csv'
 
 	def __init__(self, pipeline_root_directory, molgenis_directory, root_directory, tools_directory):
 		'''
@@ -214,6 +234,7 @@ class Molgenis_compute:
 		root_directory: The directory for the generated scripts
 		tools_directory: The directory where the tools are installed
 		'''
+
 		self.job_id = self.get_job_id()
 		self.pipeline_root_directory = pipeline_root_directory
 		if root_directory:
@@ -239,20 +260,20 @@ class Molgenis_compute:
 		
 		return '\n'.join([','.join(x) for x in map(list, zip(*worksheet_data))]) + '\n'
 
-	def worksheet_filenamer(self, job_id):
+	def worksheet_filenamer(self, job_id, worksheet_id):
 		'''
 		Creates a worksheet filename
 		'''
-		return 'worksheet_' + job_id + '.csv'
+		return 'worksheet_' + job_id + '_' + str(worksheet_id) + '.csv'
 
-	def worksheet_path_filenamer(self, pipeline_name, job_id):
+	def worksheet_path_filenamer(self, pipeline_name, job_id, worksheet_id):
 		'''
 		Returns the full path of a worksheet
 		'''
 		worksheet_path = self.generated_dir_namer(pipeline_name, job_id) 
 		#Make sure this directory exists
 		self.install_tool_helper.mkdir(worksheet_path, ignore_if_exist=True)
-		worksheet_filename = self.worksheet_filenamer(job_id)
+		worksheet_filename = self.worksheet_filenamer(job_id, worksheet_id)
 		return os.path.join(worksheet_path, worksheet_filename)
 
 	def worksheet_saver(self, worksheet_filename, worksheet_data, verbose=True):
@@ -264,11 +285,11 @@ class Molgenis_compute:
 		worksheet_file.write(self.worksheet_writer(worksheet_data))
 		worksheet_file.close()
 
-	def create_worksheet(self, job_id, pipeline_name, worksheet_data, verbose=True):
+	def create_worksheet(self, job_id, pipeline_name, worksheet_data, worksheet_id, verbose=True):
 		'''
 		Creates the worksheet file
 		'''
-		worksheet_filename_path = self.worksheet_path_filenamer(pipeline_name, job_id)
+		worksheet_filename_path = self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_id)
 		self.worksheet_saver(worksheet_filename_path, worksheet_data, verbose)
 
 	def generated_dir_namer(self, pipeline_name, job_id):
@@ -277,14 +298,14 @@ class Molgenis_compute:
 		'''
 		return os.path.join(self.root_directory, pipeline_name) + '_' + job_id
 		
-	def create_root_worksheet(self, pipeline_name):
+	def create_root_worksheet(self, pipeline_name, job_id):
 		'''
 		Saves the information of the root directory for all files and tools in the pipelines
 		'''
 		root_worksheet = os.path.join(self.generated_dir_namer(pipeline_name, self.job_id), 'root_' + self.job_id + '.csv')
 		with open(root_worksheet, 'w') as root_worksheet_f:
-			root_worksheet_f.write('root\n')
-			root_worksheet_f.write(self.tools_directory)
+			root_worksheet_f.write('root,randomUUID\n')
+			root_worksheet_f.write(self.tools_directory + ',' + job_id)
 			
 		self.root_worksheet = root_worksheet
 
@@ -294,18 +315,21 @@ class Molgenis_compute:
 		'''
 		return os.path.join(self.root_directory, results_dir, pipeline_name  + '_' + job_id)
 
-	def molgenis_command_formatter(self, pipeline_name, job_id, backend):
+	def molgenis_command_formatter(self, pipeline_name, job_id, worksheet_length, backend):
 		'''
 		Format the command that generates the scripts
 		'''
+
 		command = [
 			'sh',
 			self.molgenis_compute_sh,
 			'--generate',
 			'--path', os.path.join(self.pipeline_root_directory, self.pipeline_dir[pipeline_name]),
-			'--workflow', 'workflow.csv',
-			'--parameters', 'parameters.csv',
-			self.worksheet_path_filenamer(pipeline_name, job_id),
+			'--workflow', self.workflow_names[pipeline_name],
+			'--parameters', 
+			os.path.join(self.pipeline_root_directory, self.constants_filename),
+			' '.join(self.parameters_names[pipeline_name]),
+			' '.join([self.worksheet_path_filenamer(pipeline_name, job_id, worksheet_index) for worksheet_index in range(worksheet_length)]),
 			self.root_worksheet,
 			'--rundir', self.generated_dir_namer(pipeline_name, job_id),
 			'--backend', backend,
@@ -327,6 +351,8 @@ class Molgenis_compute:
 		self.install_tool_helper.execute('sh submit.sh')
 		os.chdir(self.root_directory)
 		print 'Finished %s' % pipeline_name 
+		print 'RANDOM ID FOR THIS RUN WAS: ', str(job_id)
+		print 'Generated scripts are saved in: ', generated_dir
 
 	def worksheet_generate_submit(self, pipeline_name, worksheet_data, backend, submit=True):
 		'''
@@ -335,9 +361,15 @@ class Molgenis_compute:
 		Submit generated scripts
 		'''
 
-		self.create_worksheet(self.job_id, pipeline_name, worksheet_data, verbose=True)
-		self.create_root_worksheet(pipeline_name)
-		command = self.molgenis_command_formatter(pipeline_name, self.job_id, backend)
+		#Remove empty worksheets
+		worksheet_data = [w for w in worksheet_data if w]
+
+		for worksheet_index, current_worksheet_data in enumerate(worksheet_data):
+			self.create_worksheet(self.job_id, pipeline_name, current_worksheet_data, worksheet_index, verbose=True)
+
+		self.create_root_worksheet(pipeline_name, self.job_id)
+
+		command = self.molgenis_command_formatter(pipeline_name, self.job_id, len(worksheet_data), backend)
 
 		self.install_tool_helper.execute(' '.join(command))
 
@@ -738,6 +770,21 @@ class bioinformatics_file_helper:
 		bioinformatics_file_helper.close_file(read_from)
 
 	@staticmethod
+	def line_counter(filename):
+		'''
+		filename: a filename or open file
+		Returns the number of lines in filename
+		'''
+
+		line_g = bioinformatics_file_helper.line_generator(filename)
+
+		ret = None
+		for l in line_g:
+			ret = l[0]
+
+		return ret
+
+	@staticmethod
 	def column_generator(filename, batch_size=10000):
 		'''
 		filename: a filename or open file
@@ -849,6 +896,26 @@ class bioinformatics_file_helper:
 				print 'Delete: ', old_temp_filename
 		yield False
 
+	@staticmethod
+	def path_splitter(path):
+		'''
+		http://stackoverflow.com/questions/3167154/how-to-split-a-dos-path-into-its-components-in-python
+		'''
+
+		folders=[]
+		while True:
+			path,folder=os.path.split(path)
+
+			if folder!="":
+				folders.append(folder)
+			else:
+				if path!="":
+ 					folders.append(path)
+
+        			break
+
+		folders.reverse()
+		return folders
 
 
 import os
@@ -917,8 +984,10 @@ class Imputation:
 	}
 
 	genotypeAligner = {
-		'link': 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.3.1-dist.tar.gz',
-		'file': 'GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		#'link': 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		#'file': 'GenotypeHarmonizer-1.3.1-dist.tar.gz',
+		'link' : 'http://molgenis26.target.rug.nl/downloads/GenotypeHarmonizer/GenotypeHarmonizer-1.4.9-dist.tar.gz',
+		'file' : 'GenotypeHarmonizer-1.4.9-dist.tar.gz',
 		'dir' : 'genotype_harmonizer',
 		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory']
 		}
@@ -961,7 +1030,10 @@ class Imputation:
 		}
 
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'
-	hg18tohg19_chain = 'resources/liftover/hg18ToHg19.over.chain'
+	assembly_chains = {
+		'hg18tohg19' : 'resources/liftover/hg18ToHg19.over.chain', # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz 
+		'hg18ToHg38' : 'resources/liftover/hg18ToHg38.over.chain', # http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg38.over.chain.gz
+	}
 	reference_dir = 'resources/imputationReference'
 	tools_dir = 'tools'
 	molgenis_compute_dir = 'molgenis-compute'
@@ -985,7 +1057,9 @@ class Imputation:
 		self.molgenis_compute_dir = os.path.join(self.installation_dir, self.molgenis_compute_dir)
 		self.generated_dir = os.path.join(self.installation_dir, self.generated_dir)
 		self.genetic_map = os.path.join(self.installation_dir, self.genetic_map)
-		self.hg18tohg19_chain = os.path.join(self.installation_dir, self.hg18tohg19_chain)
+
+		for x in self.assembly_chains:
+			self.assembly_chains[x] = os.path.join(self.installation_dir, self.assembly_chains[x])
 
 		if reference_dir:
 			self.reference_dir = reference_dir
@@ -1348,7 +1422,7 @@ and make sure that it was completed without errors.
 			for from_pos in range(1, length, position_interval):
 				yield (chromosome, from_pos, from_pos + position_interval - 1)
 
-	def perform_liftover(self, study, results, backend='local', submit=True):
+	def perform_liftover(self, study, results, assembly='hg18ToHg19', backend='local', submit=True, return_worksheet=False):
 		'''
 		Generates and submits the liftover scripts
 		'''
@@ -1363,17 +1437,30 @@ and make sure that it was completed without errors.
 
 		chromosomes = stem_ped[1]
 
+		#Get the number of samples
+		n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(stem_ped[0] % {'chromosome' : chromosomes[0]})[0] + '.ped'))
+
+		if self.assembly_chains.has_key(assembly):
+			assembly_filename = self.assembly_chains[assembly]
+		else:
+			print 'Using custom assembly filename: ', str(assembly)
+			assembly_filename = assembly
+
 		worksheet_data = [
 			['study'] + [self.mc.job_id for chromosome in chromosomes],
 			['studyInputDir'] + [study for chromosome in chromosomes],
-			['liftOverChainFile'] + [os.path.join(self.cwd, self.hg18tohg19_chain) for chromosome in chromosomes],
-			['outputFolder'] + [results for chromosome in chromosomes],
+			['liftOverChainFile'] + [os.path.join(self.cwd, assembly_filename) for chromosome in chromosomes],
+			['LiftoverOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 		]
 
-		self.mc.worksheet_generate_submit('liftover', worksheet_data, backend, submit)
+		if return_worksheet:
+			return worksheet_data, n_samples, chromosomes
+		else:
+			self.mc.worksheet_generate_submit('liftover', [worksheet_data], backend, submit)
 
-	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True):
+
+	def perform_phase(self, study, results, studyDataType=None, additional_shapeit_parameters=' ', backend='local', submit=True, return_worksheet=False, chromosomes=None, n_samples=None):
 		'''
 		Generates and submits the phasing scripts
 		studyDataType can take the following values: 
@@ -1381,42 +1468,59 @@ and make sure that it was completed without errors.
 			PED : for text plink files
 		'''
 		
-		chromosomes = None
-		if studyDataType not in ['BED', 'PED', None]:
-			raise Exception('Unknown value for parameter studyDataType: ' + str(studyDataType))
-
-		if studyDataType != 'PED':
-			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
-			extensions = ['bed', 'bim', 'fam']
-			if chromosomes:
-				studyDataType = 'BED'
-
-		if not chromosomes and studyDataType != 'BED':
-			pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
-			extensions = ['ped', 'map']
-			if chromosomes:
-				studyDataType = 'PED'
-
 		if not chromosomes:
-			if not studyDataType:
-				studyDataType = '{bed,map}'
-			raise Exception('Could not find any files named *chr<CHROMOSOME>*.%s in study dir: %s' % (studyDataType.lower(), study))
+			#Perform check of input files
+			chromosomes = None
+			if studyDataType not in ['BED', 'PED', None]:
+				raise Exception('Unknown value for parameter studyDataType: ' + str(studyDataType))
+
+			if studyDataType != 'PED':
+				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.bed'))
+				extensions = ['bed', 'bim', 'fam']
+				if chromosomes:
+					studyDataType = 'BED'
+					n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.fam'))
+
+			if not chromosomes and studyDataType != 'BED':
+				pedmap_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.ped'))
+				extensions = ['ped', 'map']
+				if chromosomes:
+					studyDataType = 'PED'
+					n_samples = self.bfh.line_counter(os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosomes[0]})[0] + '.ped'))
+
+			if not chromosomes:
+				if not studyDataType:
+					studyDataType = '{bed,map}'
+				raise Exception('Could not find any files named *chr<CHROMOSOME>*.%s in study dir: %s' % (studyDataType.lower(), study))
+		else:
+			studyDataType = 'BED' # The output format from liftover
+			extensions = ['bed', 'bim', 'fam']
+			pedmap_pattern = 'chr%(chromosome)s.bed'
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for x in chromosomes],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : chromosome}) for chromosome in chromosomes],
-			['outputFolder'] + [results for chromosome in chromosomes],
+			['PhaseOutputFolder'] + [results for chromosome in chromosomes],
 			['chr'] + chromosomes,
 			['additonalShapeitParam'] + [additional_shapeit_parameters for x in chromosomes],
-			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions])  for chromosome in chromosomes],
+			['studyData'] + [ ' '.join([os.path.join(study, os.path.splitext(pedmap_pattern % {'chromosome' : chromosome})[0] + '.' + x) for x in extensions]) for chromosome in chromosomes],
 			['studyDataType'] + [studyDataType for chromosome in chromosomes],
 		]
 
-		self.mc.worksheet_generate_submit('phase', worksheet_data, backend, submit)
+		if return_worksheet:
+			#In case this is called by another function
+			return worksheet_data, n_samples, chromosomes
+		else:
+			self.mc.worksheet_generate_submit('phase', [worksheet_data], backend, submit)
 
-	def perform_impute(self, study, results, reference, additional_impute2_parameters=' ', 
+	def perform_impute(self, study, results, reference, 
+		additional_impute2_parameters=' ', 
+		additional_shapeit_parameters=' ',
+		perform_liftover_argument=False,
+		perform_phase_argument=False,
 		sample_batch_size=500, 
 		position_batch_size=5000000,
+		assembly='hg18ToHg19',
 		custom_chromosomes=None,
 		java_executable='java',
 		backend='local', 
@@ -1436,7 +1540,7 @@ and make sure that it was completed without errors.
 
 			ret = []
 			for r in range(1, n, ratio):
-				if  n-r-ratio+1 < ratio:
+				if n-r-ratio+1 < ratio:
 					ret += [[r, n]]
 					break
 				else:
@@ -1453,10 +1557,73 @@ and make sure that it was completed without errors.
 
 		reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference]['dir'] )
 
-		haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
-		if not chromosomes:
-			raise Exception('Could not find any files named chr<1-22>.haps in %s' % study)
+		phase_worksheet_data = []
+		liftover_worksheet_data = []
+		if perform_liftover_argument:
+			#The name of the pipeline
+			pipeline_name = 'liftover_phase_impute'
 
+			#This is the output of liftover and the input to phase
+			liftover_output_dir = os.path.join(results, 'results_liftover')
+
+			liftover_worksheet_data, n_samples, chromosomes = self.perform_liftover(study, 
+				results=liftover_output_dir, 
+				backend=backend, 
+				assembly=assembly,
+				submit=False, 
+				return_worksheet=True)
+
+			liftover_worksheet_data = [x for x in liftover_worksheet_data if x[0] in ['study', 'studyInputDir', 'liftOverChainFile', 'LiftoverOutputFolder']]
+
+			#This is the output of phase and the input of imputation
+			knownHapsG_dir = os.path.join(results, 'results_phase')
+
+			phase_worksheet_data, n_samples, chromosomes = self.perform_phase(
+				study=liftover_output_dir,
+				results = knownHapsG_dir,
+				studyDataType=None,
+				additional_shapeit_parameters=additional_shapeit_parameters,
+				backend=backend,
+				submit=False,
+				return_worksheet=True,
+				chromosomes=chromosomes, #Do not check for input files
+				n_samples=n_samples)
+
+			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]
+
+		elif perform_phase_argument:
+
+			#The name of the pipeline 
+			pipeline_name = 'phase_impute'
+			#This is the output of phase and the input of imputation
+			knownHapsG_dir = os.path.join(results, 'results_phase')
+
+			#Additional worksheet parameters for phasing
+			phase_worksheet_data, n_samples, chromosomes = self.perform_phase(study,
+				results = knownHapsG_dir,
+				studyDataType=None,
+				additional_shapeit_parameters=additional_shapeit_parameters,
+				backend=backend,
+				submit=False,
+				return_worksheet=True)
+
+			phase_worksheet_data = [x for x in phase_worksheet_data if x[0] in ['PhaseOutputFolder','additonalShapeitParam','studyData','studyDataType']]		
+
+		else:
+			#The name of the pipeline
+			pipeline_name = 'impute'
+			knownHapsG_dir = study
+
+			#Check if input files are in place
+			haps_pattern, chromosomes = self.bfh.get_chromosome_files(os.path.join(study, '*.haps'))
+			if not chromosomes:
+				raise Exception('Could not find any files named chr<1-22>.haps in %s' % study)
+
+			#Get number of samples
+			with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
+				n_samples = (len(haps_pattern_f.readline().split())-5)/2
+
+	
 		#Check for custom chromosomes
 		if custom_chromosomes:
 			custom_chromosomes = custom_chromosomes.split(',')
@@ -1464,10 +1631,6 @@ and make sure that it was completed without errors.
 				if custom_chromosome not in chromosomes:
 					raise Exception('Cannot locate reference panel for requested chromosome: %s' % (str(custom_chromosome)))
 			chromosomes = custom_chromosomes
-
-		#Get number of samples
-		with open(os.path.join(study, haps_pattern % {'chromosome': str(chromosomes[0])})) as haps_pattern_f:
-			n_samples = (len(haps_pattern_f.readline().split())-5)/2
 
 		sample_chunks = get_sample_chunks(n_samples)
 		sample_chunks_n = len(sample_chunks)
@@ -1484,14 +1647,14 @@ and make sure that it was completed without errors.
 
 		worksheet_data = [
 			['project'] + [self.mc.job_id for p in positions for sample_chunk in sample_chunks],
-			['knownHapsG'] + [os.path.join(study, 'chr%s.haps' % p[0]) for p in positions for sample_chunk in sample_chunks],
+			['knownHapsG'] + [os.path.join(knownHapsG_dir, 'chr%s.haps' % p[0]) for p in positions for sample_chunk in sample_chunks],
 			['m'] + [os.path.join(self.cwd, self.genetic_map % {'chromosome' : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['h'] + [os.path.join(reference_dir, self.reference_panels[reference]['hapsgz'] % {'chromosome'  : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['l'] + [os.path.join(reference_dir, self.reference_panels[reference]['legendgz'] % {'chromosome' : p[0]}) for p in positions for sample_chunk in sample_chunks],
 			['vcf'] + [os.path.join(reference_dir, self.reference_panels[reference]['vcfgz'] % {'chromosome' : p[0]}).replace('.vcf.gz', '') for p in positions for sample_chunk in sample_chunks],
 			['refType'] + [refType for p in positions for sample_chunk in sample_chunks],
 			['additonalImpute2Param'] + [additional_impute2_parameters for p in positions for sample_chunk in sample_chunks],
-			['outputFolder'] + [results for p in positions for sample_chunk in sample_chunks],
+			['ImputeOutputFolder'] + [results for p in positions for sample_chunk in sample_chunks],
 			['chr'] + [p[0] for p in positions for sample_chunk in sample_chunks],
 			['fromChrPos'] + [str(p[1]) for p in positions for sample_chunk in sample_chunks],
 			['toChrPos'] + [str(p[2]) for p in positions for sample_chunk in sample_chunks],
@@ -1500,8 +1663,8 @@ and make sure that it was completed without errors.
 			['samplechunksn'] + [str(sample_chunks_n) for p in positions for sample_chunk in sample_chunks],
 			['javaExecutable'] + [java_executable for p in positions for sample_chunk in sample_chunks],
 		]
-		
-		self.mc.worksheet_generate_submit('impute', worksheet_data, backend, submit)
+
+		self.mc.worksheet_generate_submit(pipeline_name, [worksheet_data, phase_worksheet_data, liftover_worksheet_data], backend, submit)
 
 	def perform_action(action, reference, study, results, backend):
 		'''
