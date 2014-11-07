@@ -1055,7 +1055,9 @@ class Imputation:
 		self.molgenis_compute_dir = os.path.join(self.installation_dir, self.molgenis_compute_dir)
 		self.generated_dir = os.path.join(self.installation_dir, self.generated_dir)
 		self.genetic_map = os.path.join(self.installation_dir, self.genetic_map)
-		self.hg18tohg19_chain = os.path.join(self.installation_dir, self.hg18tohg19_chain)
+
+		for x in self.assembly_chains:
+			self.assembly_chains[x] = os.path.join(self.installation_dir, self.assembly_chains[x])
 
 		if reference_dir:
 			self.reference_dir = reference_dir
