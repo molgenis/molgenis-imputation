@@ -352,7 +352,7 @@ class Molgenis_compute:
 		os.chdir(self.root_directory)
 		print 'Finished %s' % pipeline_name 
 		print 'RANDOM ID FOR THIS RUN WAS: ', str(job_id)
-		print 'Generated scripts, standard output and standard error are saved in: ', generated_dir
+		print 'Generated scripts are saved in: ', generated_dir
 
 	def worksheet_generate_submit(self, pipeline_name, worksheet_data, backend, submit=True):
 		'''
