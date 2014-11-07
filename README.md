@@ -214,6 +214,15 @@ To make use of the new reference in the imputation step use the option --referen
 
 The reason why the values of the last two parameters shoud be in quotation marks is that otherwise these values would be mistaken as parameters of the molgenis-impute.py script.
 
+## Accessing the generated scripts and intermediate temporary files
+After a successful submission, MOLGENIS-impute prints a random generated ID and the location of the generated scripts. For example:
+```
+RANDOM ID FOR THIS RUN WAS:  f0935de6
+Generated scripts are saved in:  /home/ubuntu/molgenis-imputation/molgenis_imputation/generated/impute_f0935de6
+```
+This means that the generated temporary (or intermediate) files of the analysis are stored in the folder: < OUTPUT FOLDER >/tmp_< ID > . Where < OUTPUT FOLDER > is the folder declared with the ```--output``` parameter and < ID > is the generated ID . Inspection of these files can sometimes give important insights regarding the performed analysis.
+The location of the generated scripts contains all scripts that have been submitted to the cluster. The same location is used to save the standard output and standard error from the execution of the scripts (if the cluster supports this functionality). 
+
 ## Notes 
 All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.
 
