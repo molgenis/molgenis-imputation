@@ -351,6 +351,8 @@ class Molgenis_compute:
 		self.install_tool_helper.execute('sh submit.sh')
 		os.chdir(self.root_directory)
 		print 'Finished %s' % pipeline_name 
+		print 'RANDOM ID FOR THIS RUN WAS: ', str(job_id)
+		print 'Generated scripts, standard output and standard error are saved in: ', generated_dir
 
 	def worksheet_generate_submit(self, pipeline_name, worksheet_data, backend, submit=True):
 		'''
