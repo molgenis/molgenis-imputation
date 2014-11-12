@@ -588,7 +588,9 @@ class Install_tool_helper:
 			elif 'execute_tools_directory__' in action: # execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done
 				to_execute = action.replace('execute_tools_directory__', '')
 				commands += [(os.chdir, [tool_directory])]
-				commands += [to_execute]
+				commands += [(lambda x: open('do.sh', 'w').write(x + '\n'), [to_execute])]
+				commands += ['bash do.sh']
+				commands += ['rm do.sh']
 				commands += [(os.chdir, ['..'])]
 
 			else:
