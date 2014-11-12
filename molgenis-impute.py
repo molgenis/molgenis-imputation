@@ -136,7 +136,7 @@ if __name__ == '__main__':
 					additional_impute2_parameters=args.additional_impute2_parameters, 
 					additional_shapeit_parameters=args.additional_impute2_parameters,
 					perform_liftover_argument=args.action == 'liftover_phase_impute',
-					assembly=args.assembly,
+					assembly=args.chain_file,
 					perform_phase_argument=args.action == 'phase_impute',
 					custom_chromosomes=args.chromosomes,
 					sample_batch_size=args.sample_batch_size,

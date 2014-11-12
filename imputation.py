@@ -1046,7 +1046,7 @@ Link: http://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%2
 		'file' : '1000GP_Phase3.tgz',
 		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.haps.gz',
 		'legendgz' : '1000GP_Phase3_chr%(chromosome)s.legend.gz',
-		'vcfgz' : '1000GP_Phase3_chr%(chromosome)s.vcf.gz',
+		'shapeithaps' : '1000GP_Phase4_chr%(chromosome)s_SHAPEIT.haps',
 		'install_actions': ['cd_target_directory', 'download', 'untar', 'execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done', 'cd_current_working_directory'],
 		},
 		}
@@ -1232,7 +1232,7 @@ and make sure that it was completed without errors.
 		this_reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])
 		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel][rformat].replace('%(chromosome)s', '*')))
 		if not info or not info[0]:
-			raise Exception('Reference panel %s has not been installed properly.' % reference_panel)
+			raise Exception('Reference panel %s has not been installed properly\nTry running: python molgenis-impute.py --list' % reference_panel)
 
 		vcf_pattern, chromosomes = info
 
@@ -1375,7 +1375,6 @@ and make sure that it was completed without errors.
 
 							if can_convert_to_shapeit:
 								for chromosome in chromosome_haps:
-									print 'before'
 									convert_impute2_reference_to_shapeit(
 										input_haps_filename = stem_haps_dir % {'chromosome' : chromosome}, 
 										input_legend_filename = stem_legend_dir % {'chromosome' : chromosome},
@@ -1385,7 +1384,6 @@ and make sure that it was completed without errors.
 										chromosome = chromosome,
 										input_gzip = input_gzip,
 									)
-									print 'after'
 								self.reference_panels[reference_name]['dir'] = reference_name
 								self.reference_panels[reference_name]['shapeithaps'] = stem_haps[0].replace(haps_suffix, '_SHAPEIT.haps')
 								self.reference_panels[reference_name]['shapeitsample'] = stem_haps[0].replace(haps_suffix, '_SHAPEIT.sample')

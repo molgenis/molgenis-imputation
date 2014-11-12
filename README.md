@@ -102,7 +102,7 @@ The result of this process is in binary plink format.
 By default the liftover that is performed is from hg18ToHg19. You can change the assembly by using the argument ```--chain_file``` . The accepted values are: hg18tohg19 and hg18ToHg38. Alternatively you can specify your own chain filename with the same argument. Repositories of chain files for liftovering starting from hg18 and hg19 builds can be found here: http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/ , http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/   . For example you can download the hg18ToEquCab1.over.chain.gz , save it to a local directory and use the option: ```--chain_file /path/to/hg18ToEquCab1.over.chain.gz```
 
 ## Phasing (Step 2)
-Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. Moreover files should be **aligned in the hg19 genetic reference**. The command is:
+Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. The command is:
 ```
 python molgenis-impute.py --study < STUDY DIRECTORY > --output < OUTPUT DIRECTORY >  --action phase
 ```
@@ -196,7 +196,7 @@ This is the recommended way for installing a new reference panel. Alternatively,
 There are more alternative ways to install a reference panel. In general molgenis-impute supports the following reference panels formats:
 * [SHAPEIT2 Format](http://www.shapeit.fr/pages/m02_formats/hapssample.html): Files should be per chromosome. Example: chr1_SHAPEIT.haps and chr1_SHAPEIT.sample (The _SHAPEIT part is necessary in order to make a distiction from impute2 .haps files)
 * [Impute2 Format](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html#-h): Files shoud be per chromosome. Example: chr1.haps , chr1.legend . There should also be a SINGLE .sample file. 
-* [Impute2 Format](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html#-h) compressed: Files should be per chromosome. Example: chr1.haps.gz , chr1.legend.gz . There should also be a SINGLE .sample file (not compressed). This is the default format of the reference panels available from impute2. For example: http://mathgen.stats.ox.ac.uk/impute/data_download_1000G_phase1_integrated_SHAPEIT2_9-12-13.html 
+* [Impute2 Format](http://mathgen.stats.ox.ac.uk/impute/impute_v2.html#-h) compressed: Files should be per chromosome. Example: chr1.haps.gz , chr1.legend.gz . There should also be a SINGLE .sample file (not compressed). This is the default format of the reference panels available from impute2. For example: http://mathgen.stats.ox.ac.uk/impute/data_download_1000G_phase1_integrated_SHAPEIT2_9-12-13.html . Take note that some panels have the filename pattern of chr1.hap.gz instead of chr1.hap**s**.gz . In this case you will need to rename the files. 
 * VCF: A single vcf file.
 * VCF compressed. A single compressed (with bgzip NOT gzip) vcf file. Example panel.vcf.gz
 
