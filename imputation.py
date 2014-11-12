@@ -1148,7 +1148,13 @@ and make sure that it was completed without errors.
 			raise Exception('Uknown reference panel: %s' % (reference_panel))
 
 		#Check that everything is ok
-		self.check_reference_panel_installation(reference_panel)
+		if self.reference_panels[reference_panel].has_key('shapeithaps'):
+			self.check_reference_panel_installation(reference_panel, rformat='shapeithaps', suffix='_SHAPEIT.haps')
+		elif self.reference_panels[reference_panel].has_key('vcfgz'):
+			self.check_reference_panel_installation(reference_panel)
+		else:
+			raise Exception('One of "shapeithaps" or "vcfgz" keys should be defined in reference_panels dictionary')
+
 
 	def convert_vcf_to_vcfgz(self, vcf_filename):
 		'''
