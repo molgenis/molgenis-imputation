@@ -585,6 +585,12 @@ class Install_tool_helper:
 				commands += [(os.chdir, ['..'])]
 			elif action == 'check_if_file_exists':
 				commands += [(Install_tool_helper.check_if_file_exists, [tool_filename, True])]
+			elif 'execute_tools_directory__' in action: # execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done
+				to_execute = action.replace('execute_tools_directory__', '')
+				commands += [(os.chdir, [tool_directory])]
+				commands += [to_execute]
+				commands += [(os.chdir, ['..'])]
+
 			else:
 				raise Exception('Invalid action: %s' % (str(action)))
 
@@ -1036,10 +1042,10 @@ Link: http://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%2
 		'link' : 'https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz',
 		'dir' : '1000GP_Phase3',
 		'file' : '1000GP_Phase3.tgz',
-		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.hap.gz',
+		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.haps.gz',
 		'legendgz' : '1000GP_Phase3_chr%(chromosome)s.legend.gz',
 		'vcfgz' : '1000GP_Phase3_chr%(chromosome)s.vcf.gz',
-		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory'],
+		'install_actions': ['cd_target_directory', 'download', 'untar', 'execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done', 'cd_current_working_directory'],
 		},
 		}
 
@@ -1327,8 +1333,8 @@ and make sure that it was completed without errors.
 							stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps.gz'))
 
 							#If 'haps.gz files are not available. Maybe hap.gz files exist'
-							if not stem_hapsgz[0]:
-								stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.hap.gz'))
+							#if not stem_hapsgz[0]:
+							#	stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.hap.gz'))
 
 							stem_legendgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend.gz'))
 							stem_sample = [x for x in glob.glob(os.path.join(dir_entry, '*.sample')) if '_SHAPEIT.sample' not in x]
