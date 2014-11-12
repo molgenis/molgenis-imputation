@@ -1027,6 +1027,19 @@ class Imputation:
 		'legendgz': 'chr%(chromosome)s.metabo.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.legend.gz',
 		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory'],
 		},
+		'1000_Genomes_phase3_build37' : {
+		'description' :
+'''
+1,000 Genomes haplotypes -- Phase 3 integrated variant set release in NCBI build 37 (hg19) coordinates 
+Link: http://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%20October%202014.html
+''',
+		'link' : 'https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz',
+		'dir' : '1000GP_Phase3',
+		'file' : '1000GP_Phase3.tgz',
+		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.hap.gz',
+		'legendgz' : '1000GP_Phase3_chr%(chromosome)s.legend.gz',
+		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory'],
+		},
 		}
 
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'

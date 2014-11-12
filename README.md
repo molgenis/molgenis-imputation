@@ -99,7 +99,7 @@ Under the hood molgenis-impute uses the liftOver tool from UCSC. The output will
 * ...
 
 The result of this process is in binary plink format.
-By default the liftover that is performed is from hg18ToHg19. You can change the assembly by using the argument ```--assembly``` . The accepted values are: hg18tohg19 and hg18ToHg38. Alternatively you can specify your own chain filename with the same argument. A repository of genomic assembly chain files is here: http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/ . For example you can download the hg18ToEquCab1.over.chain.gz , save it to a local directory and use the option: ```--assembly /path/to/hg18ToEquCab1.over.chain.gz```
+By default the liftover that is performed is from hg18ToHg19. You can change the assembly by using the argument ```--chain_file``` . The accepted values are: hg18tohg19 and hg18ToHg38. Alternatively you can specify your own chain filename with the same argument. Repositories of chain files for liftovering starting from hg18 and hg19 builds can be found here: http://hgdownload.cse.ucsc.edu/goldenPath/hg18/liftOver/ , http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/   . For example you can download the hg18ToEquCab1.over.chain.gz , save it to a local directory and use the option: ```--chain_file /path/to/hg18ToEquCab1.over.chain.gz```
 
 ## Phasing (Step 2)
 Phasing is the process of determining the haplotype structure of genotype data. To phase a dataset it should be either in plink text format (PED/MAP) or binary (BED/BIM/FAM). The format is automatically detected. Moreover files should be **aligned in the hg19 genetic reference**. The command is:
@@ -221,7 +221,7 @@ RANDOM ID FOR THIS RUN WAS:  f0935de6
 Generated scripts are saved in:  /home/ubuntu/molgenis-imputation/molgenis_imputation/generated/impute_f0935de6
 ```
 This means that the generated temporary (or intermediate) files of the analysis are stored in the folder: < OUTPUT FOLDER >/tmp_< ID > . Where < OUTPUT FOLDER > is the folder declared with the ```--output``` parameter and < ID > is the generated ID . Inspection of these files can sometimes give important insights regarding the performed analysis.
-The location of the generated scripts contains all scripts that have been submitted to the cluster. The same location is used to save the standard output and standard error from the execution of the scripts (if the cluster supports this functionality). 
+The location of the generated scripts contains all scripts that have been submitted to the cluster. The same location is used to save the standard output and standard error from the execution of the scripts (if the cluster supports this functionality). This location also has a ```submit.sh``` script that you can run in order to re-submit an analysis.
 
 ## Notes 
 All scripts detect if the output files are in place and in case they are, the execution is skipped. This helps in cases when an execution get abruptly stopped, to resume from the last succesful execution step. By selecting a different results directory or deleting the generated results you can repeat the analysis.

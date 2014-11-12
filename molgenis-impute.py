@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	parser.add_argument('--action', help='Action to do: liftover, phase, impute', choices=['liftover', 'phase', 'impute', 'phase_impute', 'liftover_phase_impute'])
 	parser.add_argument('--add_reference', help='Add a new reference panel', action='store_true')
 	parser.add_argument('--backend', help='Execution environment. Default: local', choices=['pbs',  'grid', 'local'], default='local')
-	parser.add_argument('--assembly', help='Genomic assembly for the liftover step', default='hg18ToHg19')
+	parser.add_argument('--chain_file', help='Genomic assembly for the liftover step', default='hg18ToHg19')
 	parser.add_argument('--nosubmit', help='Create scripts but don\'t submit them for execution', action='store_true')
 	parser.add_argument('--java_executable', help='java executable. Default: java .This is useful when java is not in the PATH', default='java')
 	
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 			raise Exception('You need to define a directory where the output results will be stored (parameter --output')
 
 		if args.action == 'liftover':
-			imp.perform_liftover(args.study, args.output, assembly=args.assembly, backend=args.backend, submit=not args.nosubmit)
+			imp.perform_liftover(args.study, args.output, assembly=args.chain_file, backend=args.backend, submit=not args.nosubmit)
 
 		elif args.action == 'phase':
 			imp.perform_phase(args.study, args.output, additional_shapeit_parameters=args.additional_shapeit_parameters, backend=args.backend, submit=not args.nosubmit)
