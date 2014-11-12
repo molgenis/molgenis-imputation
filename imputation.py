@@ -1038,6 +1038,7 @@ Link: http://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%2
 		'file' : '1000GP_Phase3.tgz',
 		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.hap.gz',
 		'legendgz' : '1000GP_Phase3_chr%(chromosome)s.legend.gz',
+		'vcfgz' : '1000GP_Phase3_chr%(chromosome)s.vcf.gz',
 		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory'],
 		},
 		}
