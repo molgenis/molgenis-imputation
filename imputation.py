@@ -1224,7 +1224,7 @@ and make sure that it was completed without errors.
 		this_reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])
 		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel][rformat].replace('%(chromosome)s', '*')))
 		if not info or not info[0]:
-			raise Exception('Reference panel %s had not been installed properly.' % reference_panel)
+			raise Exception('Reference panel %s has not been installed properly.' % reference_panel)
 
 		vcf_pattern, chromosomes = info
 
@@ -1325,6 +1325,11 @@ and make sure that it was completed without errors.
 							stem_haps = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps'))
 							stem_legend = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend'))
 							stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps.gz'))
+
+							#If 'haps.gz files are not available. Maybe hap.gz files exist'
+							if not stem_hapsgz[0]:
+								stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.hap.gz'))
+
 							stem_legendgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend.gz'))
 							stem_sample = [x for x in glob.glob(os.path.join(dir_entry, '*.sample')) if '_SHAPEIT.sample' not in x]
 							can_convert_to_shapeit = False
@@ -1347,7 +1352,7 @@ and make sure that it was completed without errors.
 								can_convert_to_shapeit = True
 
 							if (not stem_hapsgz[0] or not stem_legendgz[0]) and not can_convert_to_shapeit:
-								print 'Coud not find *.haps.gz and *.legend.gz files'
+								print 'Could not find *.haps.gz (or *.hap.gz) and *.legend.gz files'
 								print 'Neither VCF, SHAPEIT or IMPUTE2 files found in %s ..' % (reference_name_dir)
 							elif not can_convert_to_shapeit:
 								print 'Found *.haps.gz and *.legend.gz files'
