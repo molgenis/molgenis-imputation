@@ -585,6 +585,14 @@ class Install_tool_helper:
 				commands += [(os.chdir, ['..'])]
 			elif action == 'check_if_file_exists':
 				commands += [(Install_tool_helper.check_if_file_exists, [tool_filename, True])]
+			elif 'execute_tools_directory__' in action: # execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done
+				to_execute = action.replace('execute_tools_directory__', '')
+				commands += [(os.chdir, [tool_directory])]
+				commands += [(lambda x: open('do.sh', 'w').write(x + '\n'), [to_execute])]
+				commands += ['bash do.sh']
+				commands += ['rm do.sh']
+				commands += [(os.chdir, ['..'])]
+
 			else:
 				raise Exception('Invalid action: %s' % (str(action)))
 
@@ -1027,6 +1035,20 @@ class Imputation:
 		'legendgz': 'chr%(chromosome)s.metabo.phase1_release_v3.20101123.snps_indels_svs.genotypes.refpanel.ALL.legend.gz',
 		'install_actions': ['cd_target_directory', 'mkdir', 'download_in_directory', 'untar_in_directory', 'cd_current_working_directory'],
 		},
+		'1000_Genomes_phase3_build37' : {
+		'description' :
+'''
+1,000 Genomes haplotypes -- Phase 3 integrated variant set release in NCBI build 37 (hg19) coordinates 
+Link: http://mathgen.stats.ox.ac.uk/impute/1000GP%20Phase%203%20haplotypes%206%20October%202014.html
+''',
+		'link' : 'https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz',
+		'dir' : '1000GP_Phase3',
+		'file' : '1000GP_Phase3.tgz',
+		'hapsgz' : '1000GP_Phase3_chr%(chromosome)s.haps.gz',
+		'legendgz' : '1000GP_Phase3_chr%(chromosome)s.legend.gz',
+		'shapeithaps' : '1000GP_Phase4_chr%(chromosome)s_SHAPEIT.haps',
+		'install_actions': ['cd_target_directory', 'download', 'untar', 'execute_tools_directory__for i in *.hap.gz  ; do mv $i ${i/hap/haps} ; done', 'cd_current_working_directory'],
+		},
 		}
 
 	genetic_map = 'resources/genetic_map/genetic_map_chr%(chromosome)s_combined_b37.txt'
@@ -1126,7 +1148,13 @@ and make sure that it was completed without errors.
 			raise Exception('Uknown reference panel: %s' % (reference_panel))
 
 		#Check that everything is ok
-		self.check_reference_panel_installation(reference_panel)
+		if self.reference_panels[reference_panel].has_key('shapeithaps'):
+			self.check_reference_panel_installation(reference_panel, rformat='shapeithaps', suffix='_SHAPEIT.haps')
+		elif self.reference_panels[reference_panel].has_key('vcfgz'):
+			self.check_reference_panel_installation(reference_panel)
+		else:
+			raise Exception('One of "shapeithaps" or "vcfgz" keys should be defined in reference_panels dictionary')
+
 
 	def convert_vcf_to_vcfgz(self, vcf_filename):
 		'''
@@ -1210,7 +1238,7 @@ and make sure that it was completed without errors.
 		this_reference_dir = os.path.join(self.reference_dir, self.reference_panels[reference_panel]['dir'])
 		info = self.bfh.get_chromosome_files(os.path.join(this_reference_dir, self.reference_panels[reference_panel][rformat].replace('%(chromosome)s', '*')))
 		if not info or not info[0]:
-			raise Exception('Reference panel %s had not been installed properly.' % reference_panel)
+			raise Exception('Reference panel %s has not been installed properly\nTry running: python molgenis-impute.py --list' % reference_panel)
 
 		vcf_pattern, chromosomes = info
 
@@ -1311,6 +1339,11 @@ and make sure that it was completed without errors.
 							stem_haps = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps'))
 							stem_legend = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend'))
 							stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.haps.gz'))
+
+							#If 'haps.gz files are not available. Maybe hap.gz files exist'
+							#if not stem_hapsgz[0]:
+							#	stem_hapsgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.hap.gz'))
+
 							stem_legendgz = self.bfh.get_chromosome_files(os.path.join(dir_entry, '*.legend.gz'))
 							stem_sample = [x for x in glob.glob(os.path.join(dir_entry, '*.sample')) if '_SHAPEIT.sample' not in x]
 							can_convert_to_shapeit = False
@@ -1333,7 +1366,7 @@ and make sure that it was completed without errors.
 								can_convert_to_shapeit = True
 
 							if (not stem_hapsgz[0] or not stem_legendgz[0]) and not can_convert_to_shapeit:
-								print 'Coud not find *.haps.gz and *.legend.gz files'
+								print 'Could not find *.haps.gz (or *.hap.gz) and *.legend.gz files'
 								print 'Neither VCF, SHAPEIT or IMPUTE2 files found in %s ..' % (reference_name_dir)
 							elif not can_convert_to_shapeit:
 								print 'Found *.haps.gz and *.legend.gz files'
@@ -1348,7 +1381,6 @@ and make sure that it was completed without errors.
 
 							if can_convert_to_shapeit:
 								for chromosome in chromosome_haps:
-									print 'before'
 									convert_impute2_reference_to_shapeit(
 										input_haps_filename = stem_haps_dir % {'chromosome' : chromosome}, 
 										input_legend_filename = stem_legend_dir % {'chromosome' : chromosome},
@@ -1358,7 +1390,6 @@ and make sure that it was completed without errors.
 										chromosome = chromosome,
 										input_gzip = input_gzip,
 									)
-									print 'after'
 								self.reference_panels[reference_name]['dir'] = reference_name
 								self.reference_panels[reference_name]['shapeithaps'] = stem_haps[0].replace(haps_suffix, '_SHAPEIT.haps')
 								self.reference_panels[reference_name]['shapeitsample'] = stem_haps[0].replace(haps_suffix, '_SHAPEIT.sample')
