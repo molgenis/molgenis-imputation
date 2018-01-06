@@ -26,7 +26,7 @@ molgenis-impute runs in any 64-bit x86 Linux distribution and it requires the fo
 For example, to set up the environment in Ubuntu you can run:
 ```
 sudo apt-get update
-sudo apt-get install -y git openjdk-6-jre g++ python-numpy unzip make zlib1g-dev 
+sudo apt-get install -y git openjdk-8-jre g++ python-numpy unzip make zlib1g-dev 
 ```
 
 Also note that imputation reference panels can take tens of GBs of disk space 
