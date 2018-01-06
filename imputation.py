@@ -971,7 +971,8 @@ class Imputation:
 		}
 
 	plink = {
-		'link': 'http://pngu.mgh.harvard.edu/~purcell/plink/dist/plink-1.07-x86_64.zip',
+		#'link': 'http://pngu.mgh.harvard.edu/~purcell/plink/dist/plink-1.07-x86_64.zip',
+		'link': 'http://zzz.bwh.harvard.edu/plink/dist/plink-1.07-x86_64.zip',
 		'file': 'plink-1.07-x86_64.zip',
 		'dir' : 'plink-1.07-x86_64',
 		'install_actions': ['cd_target_directory', 'download', 'unzip', 'mv', 'cd_current_working_directory']
