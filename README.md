@@ -3,6 +3,13 @@ molgenis-impute
 
 Rapid generation of genetic imputation scripts for grid/cluster/local environments
 
+## Important notice
+This is a project that is not maintained any more.
+
+Some alternative imputation pipelines are:
+* [Michigan Imputation Server](https://imputationserver.sph.umich.edu/index.html). You can either upload your data and perform imputation online or set up a docker instance that will contain all required data and tools.
+* [Imputation service of Sanger](https://www.sanger.ac.uk/tool/sanger-imputation-service/)
+
 
 ## About 
 molgenis-impute is a tool for rapid generation and submission of scripts that perform genetic imputation. The generated scripts contain all rigorous quality control checks, data chunking, error handling and reporting. The tool is designed to be simple and straight-forward, for researchers that want to do imputation **now**, without limiting the available options of imputation tools.
